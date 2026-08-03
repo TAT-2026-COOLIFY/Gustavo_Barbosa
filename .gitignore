@@ -1,0 +1,29 @@
+# Backend (Maven / Spring Boot)
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/src/main/resources/static/uploads/*
+!backend/src/main/resources/static/uploads/.gitkeep
+
+# Frontend (Node / Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# Environment / secrets
+.env
+.env.local
+*.pem
+
+# IDE
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

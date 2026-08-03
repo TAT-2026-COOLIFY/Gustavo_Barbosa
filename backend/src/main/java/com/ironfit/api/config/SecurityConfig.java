@@ -33,7 +33,8 @@ public class SecurityConfig {
         "/api/auth/refresh",
         "/api/auth/logout",
         "/api/auth/esqueci-senha",
-        "/api/auth/redefinir-senha"
+        "/api/auth/redefinir-senha",
+        "/uploads/**"
     };
 
     @Bean

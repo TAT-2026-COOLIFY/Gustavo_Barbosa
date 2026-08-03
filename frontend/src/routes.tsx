@@ -7,6 +7,7 @@ import { CadastroPage } from '@/features/auth/pages/CadastroPage'
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { DashboardPlaceholderPage } from '@/features/dashboard/pages/DashboardPlaceholderPage'
+import { PerfilPage } from '@/features/perfil/pages/PerfilPage'
 
 export function AppRoutes() {
   return (
@@ -19,6 +20,7 @@ export function AppRoutes() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/app" element={<DashboardPlaceholderPage />} />
+        <Route path="/perfil" element={<PerfilPage />} />
       </Route>
     </Routes>
   )

@@ -1,8 +1,8 @@
 # Backend (Maven / Spring Boot)
 backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
-backend/src/main/resources/static/uploads/*
-!backend/src/main/resources/static/uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # Frontend (Node / Vite)
 frontend/node_modules/

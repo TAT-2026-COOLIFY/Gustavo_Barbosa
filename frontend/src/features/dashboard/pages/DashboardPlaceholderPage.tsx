@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { LogOut, User } from 'lucide-react'
+import { Dumbbell, LogOut, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,11 @@ export function DashboardPlaceholderPage() {
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background px-6">
       <div className="absolute top-6 right-6 flex items-center gap-2">
         <ThemeToggle />
+        <Button asChild variant="glass" size="icon">
+          <Link to="/treinos" aria-label="Treinos">
+            <Dumbbell />
+          </Link>
+        </Button>
         <Button asChild variant="glass" size="icon">
           <Link to="/perfil" aria-label="Meu perfil">
             <User />

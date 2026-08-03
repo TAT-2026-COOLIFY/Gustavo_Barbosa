@@ -8,6 +8,10 @@ import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { DashboardPlaceholderPage } from '@/features/dashboard/pages/DashboardPlaceholderPage'
 import { PerfilPage } from '@/features/perfil/pages/PerfilPage'
+import { TreinosListPage } from '@/features/treinos/pages/TreinosListPage'
+import { TreinoFormPage } from '@/features/treinos/pages/TreinoFormPage'
+import { ExecucaoTreinoPage } from '@/features/treinos/pages/ExecucaoTreinoPage'
+import { HistoricoTreinosPage } from '@/features/treinos/pages/HistoricoTreinosPage'
 
 export function AppRoutes() {
   return (
@@ -21,6 +25,11 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/app" element={<DashboardPlaceholderPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
+        <Route path="/treinos" element={<TreinosListPage />} />
+        <Route path="/treinos/novo" element={<TreinoFormPage />} />
+        <Route path="/treinos/:id/editar" element={<TreinoFormPage />} />
+        <Route path="/treinos/execucao/:sessaoId" element={<ExecucaoTreinoPage />} />
+        <Route path="/treinos/historico" element={<HistoricoTreinosPage />} />
       </Route>
     </Routes>
   )

@@ -48,3 +48,12 @@ ironfit:
     allowed-origins: http://localhost:5173
   storage:
     upload-dir: uploads
+  jwt:
+    secret: ${JWT_SECRET:PPrw/m4PExYDqq/SGwKDAndutE59OwYHdC3qcwlYoHawwX526FwZ9Hw4Ck35c2TY}
+    access-token-ttl-minutes: 15
+    refresh-token-ttl-days: 7
+  security:
+    password-reset-token-ttl-hours: 1
+    login-rate-limit:
+      capacity: 5
+      refill-minutes: 15

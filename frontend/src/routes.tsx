@@ -12,6 +12,9 @@ import { TreinosListPage } from '@/features/treinos/pages/TreinosListPage'
 import { TreinoFormPage } from '@/features/treinos/pages/TreinoFormPage'
 import { ExecucaoTreinoPage } from '@/features/treinos/pages/ExecucaoTreinoPage'
 import { HistoricoTreinosPage } from '@/features/treinos/pages/HistoricoTreinosPage'
+import { DietasListPage } from '@/features/dieta/pages/DietasListPage'
+import { DietaFormPage } from '@/features/dieta/pages/DietaFormPage'
+import { DiarioPage } from '@/features/dieta/pages/DiarioPage'
 
 export function AppRoutes() {
   return (
@@ -30,6 +33,10 @@ export function AppRoutes() {
         <Route path="/treinos/:id/editar" element={<TreinoFormPage />} />
         <Route path="/treinos/execucao/:sessaoId" element={<ExecucaoTreinoPage />} />
         <Route path="/treinos/historico" element={<HistoricoTreinosPage />} />
+        <Route path="/dietas" element={<DietasListPage />} />
+        <Route path="/dietas/novo" element={<DietaFormPage />} />
+        <Route path="/dietas/:id/editar" element={<DietaFormPage />} />
+        <Route path="/dietas/diario" element={<DiarioPage />} />
       </Route>
     </Routes>
   )

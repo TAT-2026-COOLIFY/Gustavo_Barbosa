@@ -68,21 +68,21 @@ types/<modulo>.ts   interfaces espelhando os DTOs do backend
 | 3 | **Treinos**: CRUD, templates do sistema, duplicar, favoritar, grupos musculares, execução com cronômetro + registro de séries (`SessaoTreino`/`SerieExecutada`), histórico, volume semanal | `371ca45` |
 | 4 | **Dietas**: catálogo de alimentos (~50 seed TACO + personalizados), CRUD de dieta com refeições/itens, **cálculo automático de metas** (TMB Mifflin-St Jeor + fator atividade + Strategy por objetivo via `EstrategiaMetaNutricionalFactory`), diário alimentar (`RegistroRefeicao`, separado do plano), 22 testes unitários novos | `6a00e3c` |
 | 5 | **Hidratação**: meta diária de água (`MetaHidratacao`, padrão "um ativo por vez", default 2000ml auto-criado), registro de consumo (`RegistroHidratacao`, um por copo/clique, com desfazer), resumo do dia (total/meta/percentual), histórico dos últimos N dias com gráfico de barras (sem lib externa, SVG/CSS puro), sequência de dias consecutivos batendo a meta, 7 testes unitários novos | `9244cc9` |
+| 6 | **Progresso**: `RegistroProgresso` (peso, % gordura, 5 circunferências, foto de evolução, observações) único por dia (upsert), **introduz IMC e massa magra no sistema** (calculados a partir da altura do Perfil, nenhum campo existia antes), histórico com gráfico de peso (SVG puro, com linha de meta do Objetivo quando existir), comparação de fotos antes/agora, sugestão (soft, sem FK) do último peso registrado ao criar uma Dieta nova, 6 testes unitários novos | `2ddd085` |
 
-Pacotes/pastas **já criadas mas ainda vazias** (placeholders arquiteturais para as próximas fases): backend `ai/`, `dashboard/`, `meditacao/`, `notificacao/`, `progresso/`; frontend `features/dashboard` (só tem `DashboardPlaceholderPage`), `features/ia`, `features/meditacao`, `features/notificacoes`, `features/progresso`.
+Pacotes/pastas **já criadas mas ainda vazias** (placeholders arquiteturais para as próximas fases): backend `ai/`, `dashboard/`, `meditacao/`, `notificacao/`; frontend `features/dashboard` (só tem `DashboardPlaceholderPage`), `features/ia`, `features/meditacao`, `features/notificacoes`.
 
-Rotas atuais (`frontend/src/routes.tsx`): `/`, `/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` (públicas) + `/app` (dashboard placeholder), `/perfil`, `/treinos`, `/treinos/novo`, `/treinos/:id/editar`, `/treinos/execucao/:sessaoId`, `/treinos/historico`, `/dietas`, `/dietas/novo`, `/dietas/:id/editar`, `/dietas/diario`, `/hidratacao` (protegidas).
+Rotas atuais (`frontend/src/routes.tsx`): `/`, `/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` (públicas) + `/app` (dashboard placeholder), `/perfil`, `/treinos`, `/treinos/novo`, `/treinos/:id/editar`, `/treinos/execucao/:sessaoId`, `/treinos/historico`, `/dietas`, `/dietas/novo`, `/dietas/:id/editar`, `/dietas/diario`, `/hidratacao`, `/progresso` (protegidas).
 
 ## O que falta fazer
 
 Ordem sugerida (deixando o Dashboard real por último de propósito — ele agrega dados de todos os outros módulos, então implementá-lo cedo geraria retrabalho):
 
-1. **Progresso**: peso, fotos de evolução, IMC, % gordura, massa magra, circunferências, gráficos comparativos — **nenhum campo de peso atual/IMC existe ainda em lugar nenhum do sistema**, este módulo é quem deve introduzir isso (histórico de peso), possivelmente alimentando `pesoReferenciaKg` da Dieta como sugestão
-2. **IA**: assistente conversacional (integração com API OpenAI ou Claude) que gera treino/dieta/dicas a partir de uma conversa com o usuário — nenhuma integração de IA existe ainda no projeto (sem SDK, sem chave de API configurada); `OrigemTreino`/`OrigemDieta` já têm o valor `IA` no enum, preparado para quando esse módulo existir
-3. **Meditação**: sessões guiadas, tempo, respiração, histórico
-4. **Notificações**: água, treino, refeição, metas
-5. **Dashboard real**: substituir `DashboardPlaceholderPage` — saudação, IMC, peso, objetivo, água, treino do dia, refeições/calorias/macros, gráficos semanal/mensal, dias consecutivos, conquistas (depende de 1-4 já existirem)
-6. **Testes & Documentação** (fase dedicada, ao final): testes de integração cobrindo todos os módulos (hoje `dieta` e `hidratacao` têm testes unitários; `auth`/`perfil`/`treino` não têm nenhum teste), README profissional, DER, diagrama de classes/UML, diagrama de casos de uso, fluxogramas
+1. **IA**: assistente conversacional (integração com API OpenAI ou Claude) que gera treino/dieta/dicas a partir de uma conversa com o usuário — nenhuma integração de IA existe ainda no projeto (sem SDK, sem chave de API configurada); `OrigemTreino`/`OrigemDieta` já têm o valor `IA` no enum, preparado para quando esse módulo existir
+2. **Meditação**: sessões guiadas, tempo, respiração, histórico
+3. **Notificações**: água, treino, refeição, metas
+4. **Dashboard real**: substituir `DashboardPlaceholderPage` — saudação, IMC, peso, objetivo, água, treino do dia, refeições/calorias/macros, gráficos semanal/mensal, dias consecutivos, conquistas (depende de 1-3 já existirem)
+5. **Testes & Documentação** (fase dedicada, ao final): testes de integração cobrindo todos os módulos (hoje `dieta`, `hidratacao` e `progresso` têm testes unitários; `auth`/`perfil`/`treino` não têm nenhum teste), README profissional, DER, diagrama de classes/UML, diagrama de casos de uso, fluxogramas
 
 ## Como rodar
 
@@ -105,5 +105,5 @@ Swagger: `http://localhost:8080/swagger-ui.html`. Frontend dev: `http://localhos
 
 - **Sem lib de estado/data-fetching no frontend** é intencional, não esquecimento — mantém o projeto simples de explicar na banca. Novas features devem seguir o mesmo padrão (`useState`+`useEffect`+`api/*.ts`), não introduzir React Query/Zustand no meio do caminho.
 - **Dashboard fica por último** de propósito (ver seção "O que falta fazer").
-- **Módulo Dieta não depende de Progresso** (que ainda não existe): guarda um snapshot (`pesoReferenciaKg`, `nivelAtividade`) na própria `Dieta` em vez de uma FK para histórico de peso. Quando Progresso existir, pode sugerir o último peso registrado para pré-preencher o formulário, sem criar acoplamento rígido.
+- **Módulo Dieta não tem FK para Progresso**: guarda um snapshot (`pesoReferenciaKg`, `nivelAtividade`) na própria `Dieta` em vez de uma referência a `RegistroProgresso`. Agora que Progresso existe, `DietaFormPage` busca `GET /progresso/ultimo` só no frontend (best-effort, ignora 404) para pré-preencher `pesoReferenciaKg` de uma dieta nova — integração só de UX, sem acoplamento no backend.
 - **Sem repositório remoto configurado** (`git remote -v` vazio) — todo o progresso está apenas no `.git` local desta máquina. Sugerir ao usuário configurar um remoto (GitHub) para backup fora da máquina é válido a qualquer momento.

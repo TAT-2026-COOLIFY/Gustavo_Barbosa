@@ -16,6 +16,7 @@ import { DietasListPage } from '@/features/dieta/pages/DietasListPage'
 import { DietaFormPage } from '@/features/dieta/pages/DietaFormPage'
 import { DiarioPage } from '@/features/dieta/pages/DiarioPage'
 import { HidratacaoPage } from '@/features/hidratacao/pages/HidratacaoPage'
+import { ProgressoPage } from '@/features/progresso/pages/ProgressoPage'
 
 export function AppRoutes() {
   return (
@@ -39,6 +40,7 @@ export function AppRoutes() {
         <Route path="/dietas/:id/editar" element={<DietaFormPage />} />
         <Route path="/dietas/diario" element={<DiarioPage />} />
         <Route path="/hidratacao" element={<HidratacaoPage />} />
+        <Route path="/progresso" element={<ProgressoPage />} />
       </Route>
     </Routes>
   )

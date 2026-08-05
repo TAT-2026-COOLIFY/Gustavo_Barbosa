@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { RefeicaoFormItem } from '@/features/dieta/components/RefeicaoFormItem'
 import { atualizarDieta, calcularMetas, criarDieta, obterDieta } from '@/features/dieta/api/dietaApi'
+import { getUltimoProgresso } from '@/features/progresso/api/progressoApi'
 import { dietaSchema, type DietaFormValues } from '@/features/dieta/schemas/dietaSchemas'
 import type { MetaNutricionalCalculadaDTO, NivelAtividade } from '@/types/dieta'
 import type { TipoObjetivo } from '@/types/perfil'
@@ -83,6 +84,19 @@ export function DietaFormPage() {
       })
     })
   }, [editando, id, reset])
+
+  // Sugestão leve, sem acoplamento rígido: se o módulo de Progresso já tiver um peso registrado,
+  // pré-preenche o campo (o usuário pode ajustar livremente). Se não houver registro, ignora.
+  useEffect(() => {
+    if (editando) return
+    getUltimoProgresso()
+      .then((ultimo) => {
+        if (!form.getValues('pesoReferenciaKg')) {
+          form.setValue('pesoReferenciaKg', String(ultimo.pesoKg))
+        }
+      })
+      .catch(() => {})
+  }, [editando, form])
 
   async function handleCalcularPreview() {
     const peso = form.getValues('pesoReferenciaKg')

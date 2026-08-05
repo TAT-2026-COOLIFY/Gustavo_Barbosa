@@ -13,4 +13,6 @@ public interface TreinoRepository extends JpaRepository<Treino, Long> {
     List<Treino> findByUsuarioIsNullAndOrigemOrderByNome(OrigemTreino origem);
 
     Optional<Treino> findByIdAndUsuarioId(Long id, Long usuarioId);
+
+    boolean existsByUsuarioId(Long usuarioId);
 }

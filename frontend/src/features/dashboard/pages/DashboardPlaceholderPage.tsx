@@ -1,18 +1,35 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Apple, Droplets, Dumbbell, LineChart, LogOut, Sparkles, User, Wind } from 'lucide-react'
+import { Apple, Bell, Droplets, Dumbbell, LineChart, LogOut, Sparkles, User, Wind } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { contarNotificacoesNaoLidas } from '@/features/notificacoes/api/notificacaoApi'
 
 export function DashboardPlaceholderPage() {
   const { usuario, sair } = useAuth()
+  const [naoLidas, setNaoLidas] = useState(0)
+
+  useEffect(() => {
+    contarNotificacoesNaoLidas().then(setNaoLidas)
+  }, [])
 
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background px-6">
       <div className="absolute top-6 right-6 flex items-center gap-2">
         <ThemeToggle />
+        <Button asChild variant="glass" size="icon" className="relative">
+          <Link to="/notificacoes" aria-label="Notificações">
+            <Bell />
+            {naoLidas > 0 && (
+              <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+                {naoLidas > 9 ? '9+' : naoLidas}
+              </span>
+            )}
+          </Link>
+        </Button>
         <Button asChild variant="glass" size="icon">
           <Link to="/treinos" aria-label="Treinos">
             <Dumbbell />
@@ -61,7 +78,7 @@ export function DashboardPlaceholderPage() {
       >
         <h1 className="text-2xl font-semibold">Olá, {usuario?.nome}!</h1>
         <p className="max-w-sm text-muted-foreground">
-          O Dashboard completo (IMC, treino do dia, calorias, gráficos) será implementado na Fase 8. Por enquanto,
+          O Dashboard completo (IMC, treino do dia, calorias, gráficos) será implementado mais adiante. Por enquanto,
           esta tela confirma que sua sessão está autenticada.
         </p>
       </motion.div>

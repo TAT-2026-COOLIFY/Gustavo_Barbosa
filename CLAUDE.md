@@ -70,20 +70,20 @@ types/<modulo>.ts   interfaces espelhando os DTOs do backend
 | 5 | **Hidratação**: meta diária de água (`MetaHidratacao`, padrão "um ativo por vez", default 2000ml auto-criado), registro de consumo (`RegistroHidratacao`, um por copo/clique, com desfazer), resumo do dia (total/meta/percentual), histórico dos últimos N dias com gráfico de barras (sem lib externa, SVG/CSS puro), sequência de dias consecutivos batendo a meta, 7 testes unitários novos | `9244cc9` |
 | 6 | **Progresso**: `RegistroProgresso` (peso, % gordura, 5 circunferências, foto de evolução, observações) único por dia (upsert), **introduz IMC e massa magra no sistema** (calculados a partir da altura do Perfil, nenhum campo existia antes), histórico com gráfico de peso (SVG puro, com linha de meta do Objetivo quando existir), comparação de fotos antes/agora, sugestão (soft, sem FK) do último peso registrado ao criar uma Dieta nova, 6 testes unitários novos | `2ddd085` |
 | 7 | **IA**: assistente conversacional via OpenAI (chat completions, `response_format: json_object`), histórico de conversas/mensagens persistido (`ConversaIa`/`MensagemIa`), prompt inclui o catálogo real de exercícios/alimentos (o modelo só pode sugerir ids existentes), **fluxo de rascunho para revisão**: sugestão de treino/dieta vira `RascunhoIa` (`PENDENTE`), usuário revisa em `/treinos/novo` ou `/dietas/novo` já pré-preenchido e só confirmar cria o Treino/Dieta de verdade com `origem=IA` (`TreinoService`/`DietaService` ganharam overload `criar(usuarioId, request, origem)`); sem chave de API configurada nesta sessão (ver `OPENAI_API_KEY` em "Como rodar"), integração construída e testada via mock do client, nunca chamada de verdade ainda; 10 testes unitários novos | `09c7d8f` |
+| 8 | **Meditação**: catálogo de sessões guiadas do sistema (`Meditacao`, 9 sessões seed em 5 tipos — sem versão privada por usuário, escopo não pedia), execução com cronômetro (`SessaoMeditacao`, mesmo padrão iniciar/concluir de `SessaoTreino`), animação de respiração guiada (inspirar/segurar/expirar em CSS puro, sem lib) para sessões do tipo `RESPIRACAO`, histórico e sequência de dias consecutivos, 6 testes unitários novos | `da9ebdb` |
 
-Pacotes/pastas **já criadas mas ainda vazias** (placeholders arquiteturais para as próximas fases): backend `dashboard/`, `meditacao/`, `notificacao/`; frontend `features/dashboard` (só tem `DashboardPlaceholderPage`), `features/meditacao`, `features/notificacoes`.
+Pacotes/pastas **já criadas mas ainda vazias** (placeholders arquiteturais para as próximas fases): backend `dashboard/`, `notificacao/`; frontend `features/dashboard` (só tem `DashboardPlaceholderPage`), `features/notificacoes`.
 
-Rotas atuais (`frontend/src/routes.tsx`): `/`, `/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` (públicas) + `/app` (dashboard placeholder), `/perfil`, `/treinos`, `/treinos/novo`, `/treinos/:id/editar`, `/treinos/execucao/:sessaoId`, `/treinos/historico`, `/dietas`, `/dietas/novo`, `/dietas/:id/editar`, `/dietas/diario`, `/hidratacao`, `/progresso`, `/ia` (protegidas).
+Rotas atuais (`frontend/src/routes.tsx`): `/`, `/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` (públicas) + `/app` (dashboard placeholder), `/perfil`, `/treinos`, `/treinos/novo`, `/treinos/:id/editar`, `/treinos/execucao/:sessaoId`, `/treinos/historico`, `/dietas`, `/dietas/novo`, `/dietas/:id/editar`, `/dietas/diario`, `/hidratacao`, `/progresso`, `/ia`, `/meditacao`, `/meditacao/execucao/:sessaoId`, `/meditacao/historico` (protegidas).
 
 ## O que falta fazer
 
 Ordem sugerida (deixando o Dashboard real por último de propósito — ele agrega dados de todos os outros módulos, então implementá-lo cedo geraria retrabalho):
 
-1. **Meditação**: sessões guiadas, tempo, respiração, histórico
-2. **Notificações**: água, treino, refeição, metas
-3. **Dashboard real**: substituir `DashboardPlaceholderPage` — saudação, IMC, peso, objetivo, água, treino do dia, refeições/calorias/macros, gráficos semanal/mensal, dias consecutivos, conquistas (depende de 1-2 já existirem)
-4. **Testes & Documentação** (fase dedicada, ao final): testes de integração cobrindo todos os módulos (hoje `dieta`, `hidratacao`, `progresso` e `ia` têm testes unitários; `auth`/`perfil`/`treino` não têm nenhum teste), README profissional, DER, diagrama de classes/UML, diagrama de casos de uso, fluxogramas
-5. **Testar a integração de IA de ponta a ponta** assim que houver uma chave da OpenAI disponível (ver `OPENAI_API_KEY` em "Como rodar") — hoje só validada com o client mockado
+1. **Notificações**: água, treino, refeição, metas
+2. **Dashboard real**: substituir `DashboardPlaceholderPage` — saudação, IMC, peso, objetivo, água, treino do dia, refeições/calorias/macros, gráficos semanal/mensal, dias consecutivos, conquistas (depende de 1 já existir, os demais módulos já estão prontos)
+3. **Testes & Documentação** (fase dedicada, ao final): testes de integração cobrindo todos os módulos (hoje `dieta`, `hidratacao`, `progresso`, `ia` e `meditacao` têm testes unitários; `auth`/`perfil`/`treino` não têm nenhum teste), README profissional, DER, diagrama de classes/UML, diagrama de casos de uso, fluxogramas
+4. **Testar a integração de IA de ponta a ponta** assim que houver uma chave da OpenAI disponível (ver `OPENAI_API_KEY` em "Como rodar") — hoje só validada com o client mockado
 
 ## Como rodar
 

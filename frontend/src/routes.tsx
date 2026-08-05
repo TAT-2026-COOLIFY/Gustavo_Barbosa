@@ -18,6 +18,9 @@ import { DiarioPage } from '@/features/dieta/pages/DiarioPage'
 import { HidratacaoPage } from '@/features/hidratacao/pages/HidratacaoPage'
 import { ProgressoPage } from '@/features/progresso/pages/ProgressoPage'
 import { IaChatPage } from '@/features/ia/pages/IaChatPage'
+import { MeditacoesListPage } from '@/features/meditacao/pages/MeditacoesListPage'
+import { ExecucaoMeditacaoPage } from '@/features/meditacao/pages/ExecucaoMeditacaoPage'
+import { HistoricoMeditacaoPage } from '@/features/meditacao/pages/HistoricoMeditacaoPage'
 
 export function AppRoutes() {
   return (
@@ -43,6 +46,9 @@ export function AppRoutes() {
         <Route path="/hidratacao" element={<HidratacaoPage />} />
         <Route path="/progresso" element={<ProgressoPage />} />
         <Route path="/ia" element={<IaChatPage />} />
+        <Route path="/meditacao" element={<MeditacoesListPage />} />
+        <Route path="/meditacao/execucao/:sessaoId" element={<ExecucaoMeditacaoPage />} />
+        <Route path="/meditacao/historico" element={<HistoricoMeditacaoPage />} />
       </Route>
     </Routes>
   )

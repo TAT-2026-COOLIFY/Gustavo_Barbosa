@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Apple, Droplets, Dumbbell, LineChart, LogOut, Sparkles, User } from 'lucide-react'
+import { Apple, Droplets, Dumbbell, LineChart, LogOut, Sparkles, User, Wind } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { Button } from '@/components/ui/button'
@@ -36,6 +36,11 @@ export function DashboardPlaceholderPage() {
         <Button asChild variant="glass" size="icon">
           <Link to="/ia" aria-label="Assistente IA">
             <Sparkles />
+          </Link>
+        </Button>
+        <Button asChild variant="glass" size="icon">
+          <Link to="/meditacao" aria-label="Meditação">
+            <Wind />
           </Link>
         </Button>
         <Button asChild variant="glass" size="icon">

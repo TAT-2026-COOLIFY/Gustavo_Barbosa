@@ -2,6 +2,25 @@
 
 TCC (ADS) full-stack: backend Spring Boot + frontend React. Projeto construído **fase por fase**, um módulo completo (backend + frontend) por vez, um commit por fase na branch `master`.
 
+## Resumo geral do progresso (para retomar rapidamente)
+
+**10 fases concluídas (0 a 9)**, todas com backend + frontend integrados, testados e commitados — cada uma virou um módulo completo de ponta a ponta antes de passar pra próxima. A jornada até aqui, em ordem:
+
+0. Scaffolding do projeto (Spring Boot 4 + Vite/React/TS).
+1. **Auth** — cadastro, login com JWT+refresh token, logout, recuperação de senha.
+2. **Perfil** — dados pessoais e Objetivo (tipo + peso meta).
+3. **Treinos** — CRUD, templates, execução com cronômetro, histórico, volume semanal.
+4. **Dietas** — catálogo de alimentos, CRUD com **cálculo automático de metas nutricionais** (TMB + Strategy por objetivo), diário alimentar.
+5. **Hidratação** — meta diária, registro rápido de consumo, histórico com gráfico, sequência de dias.
+6. **Progresso** — peso/IMC/% gordura/circunferências/fotos de evolução; **introduziu IMC no sistema** (não existia antes).
+7. **IA** — assistente conversacional via OpenAI; gera *rascunhos* de treino/dieta que o usuário revisa e confirma antes de qualquer gravação real (nunca grava sozinha).
+8. **Meditação** — catálogo de sessões guiadas, execução com cronômetro e animação de respiração, histórico.
+9. **Notificações** — central in-app (água/treino/refeição/metas), gerada sob demanda, sem push nem job agendado.
+
+**O que falta** (só isso): (1) **Dashboard real** substituindo a tela placeholder — agora que todos os módulos que ele agrega já existem, não há mais motivo pra adiar; (2) fase final de **Testes & Documentação** (testes de integração, README, DER, UML, casos de uso); (3) **testar a IA de ponta a ponta** quando o usuário configurar sua própria chave da OpenAI (adiado por escolha dele — ver seção "Como rodar").
+
+Detalhes de cada fase (arquivos, decisões técnicas, hash do commit) estão na tabela abaixo e em "Decisões arquiteturais notáveis". Antes de continuar em uma nova sessão: leia este resumo, confira `git log --oneline -15` pra confirmar que bate com a tabela, e comece pela próxima fase da lista "O que falta fazer".
+
 ## Stack
 
 **Backend** — `backend/` (Maven, Java 21, Spring Boot 4)

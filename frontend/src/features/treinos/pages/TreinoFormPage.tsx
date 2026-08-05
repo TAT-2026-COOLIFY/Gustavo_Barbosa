@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useFieldArray, useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 
@@ -11,14 +11,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
+import { confirmarRascunhoTreino } from '@/features/ia/api/iaApi'
 import { criarTreino, listarExercicios, obterTreino, atualizarTreino } from '@/features/treinos/api/treinoApi'
 import { treinoSchema, type TreinoFormValues } from '@/features/treinos/schemas/treinoSchemas'
+import type { RascunhoTreinoDados } from '@/types/ia'
 import type { ExercicioResponseDTO } from '@/types/treino'
 
 export function TreinoFormPage() {
   const { id } = useParams()
   const editando = !!id
   const navigate = useNavigate()
+  const location = useLocation()
+  const rascunhoIa = location.state as { rascunhoIaId?: number; dados?: RascunhoTreinoDados } | null
   const [exercicios, setExercicios] = useState<ExercicioResponseDTO[]>([])
 
   const {
@@ -54,6 +58,22 @@ export function TreinoFormPage() {
     })
   }, [editando, id, reset])
 
+  // Chegou a partir de uma sugestão do Assistente IA ("Editar e salvar"): pré-preenche com o rascunho,
+  // que o usuário revisa e edita livremente antes de confirmar.
+  useEffect(() => {
+    if (editando || !rascunhoIa?.dados) return
+    reset({
+      nome: rascunhoIa.dados.nome,
+      exercicios: rascunhoIa.dados.exercicios.map((ex) => ({
+        exercicioId: String(ex.exercicioId),
+        seriesAlvo: String(ex.seriesAlvo),
+        repeticoesAlvo: String(ex.repeticoesAlvo),
+        cargaAlvoKg: ex.cargaAlvoKg ? String(ex.cargaAlvoKg) : '',
+        descansoSegundos: ex.descansoSegundos ? String(ex.descansoSegundos) : '',
+      })),
+    })
+  }, [editando, rascunhoIa, reset])
+
   async function onSubmit(values: TreinoFormValues) {
     const payload = {
       nome: values.nome,
@@ -69,6 +89,8 @@ export function TreinoFormPage() {
 
     if (editando) {
       await atualizarTreino(Number(id), payload)
+    } else if (rascunhoIa?.rascunhoIaId) {
+      await confirmarRascunhoTreino(rascunhoIa.rascunhoIaId, payload)
     } else {
       await criarTreino(payload)
     }
@@ -94,7 +116,9 @@ export function TreinoFormPage() {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card className="glass border-0">
             <CardHeader>
-              <CardTitle>{editando ? 'Editar treino' : 'Novo treino'}</CardTitle>
+              <CardTitle>
+                {editando ? 'Editar treino' : rascunhoIa?.rascunhoIaId ? 'Revisar sugestão da IA' : 'Novo treino'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)} noValidate>

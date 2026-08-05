@@ -57,3 +57,7 @@ ironfit:
     login-rate-limit:
       capacity: 5
       refill-minutes: 15
+  ia:
+    api-key: ${OPENAI_API_KEY:}
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+    modelo: ${OPENAI_MODEL:gpt-4o-mini}

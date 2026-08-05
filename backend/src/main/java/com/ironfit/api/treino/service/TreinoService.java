@@ -75,6 +75,12 @@ public class TreinoService {
 
     @Transactional
     public TreinoResponseDTO criar(Long usuarioId, TreinoRequestDTO request) {
+        return criar(usuarioId, request, OrigemTreino.MANUAL);
+    }
+
+    /** Usado pelo módulo de IA para criar um treino já marcado com {@link OrigemTreino#IA} ao confirmar um rascunho. */
+    @Transactional
+    public TreinoResponseDTO criar(Long usuarioId, TreinoRequestDTO request, OrigemTreino origem) {
         Usuario usuario = usuarioRepository
                 .findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
@@ -82,7 +88,7 @@ public class TreinoService {
         Treino treino = Treino.builder()
                 .usuario(usuario)
                 .nome(request.nome())
-                .origem(OrigemTreino.MANUAL)
+                .origem(origem)
                 .build();
         treinoRepository.save(treino);
 

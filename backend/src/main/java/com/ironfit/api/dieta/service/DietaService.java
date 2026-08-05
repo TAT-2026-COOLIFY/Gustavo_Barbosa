@@ -95,11 +95,17 @@ public class DietaService {
 
     @Transactional
     public DietaResponseDTO criar(Long usuarioId, DietaRequestDTO request) {
+        return criar(usuarioId, request, OrigemDieta.MANUAL);
+    }
+
+    /** Usado pelo módulo de IA para criar uma dieta já marcada com {@link OrigemDieta#IA} ao confirmar um rascunho. */
+    @Transactional
+    public DietaResponseDTO criar(Long usuarioId, DietaRequestDTO request, OrigemDieta origem) {
         Usuario usuario = usuarioRepository
                 .findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        Dieta dieta = Dieta.builder().usuario(usuario).nome(request.nome()).origem(OrigemDieta.MANUAL).build();
+        Dieta dieta = Dieta.builder().usuario(usuario).nome(request.nome()).origem(origem).build();
         aplicarMetas(dieta, usuarioId, request);
         dietaRepository.save(dieta);
 

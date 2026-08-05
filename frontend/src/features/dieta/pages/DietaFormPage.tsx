@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Controller, FormProvider, useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Plus, Sparkles } from 'lucide-react'
 
@@ -12,11 +12,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
+import { buscarAlimentos } from '@/features/dieta/api/alimentoApi'
 import { RefeicaoFormItem } from '@/features/dieta/components/RefeicaoFormItem'
 import { atualizarDieta, calcularMetas, criarDieta, obterDieta } from '@/features/dieta/api/dietaApi'
+import { confirmarRascunhoDieta } from '@/features/ia/api/iaApi'
 import { getUltimoProgresso } from '@/features/progresso/api/progressoApi'
 import { dietaSchema, type DietaFormValues } from '@/features/dieta/schemas/dietaSchemas'
-import type { MetaNutricionalCalculadaDTO, NivelAtividade } from '@/types/dieta'
+import type { AlimentoResponseDTO, MetaNutricionalCalculadaDTO, NivelAtividade } from '@/types/dieta'
+import type { RascunhoDietaDados } from '@/types/ia'
 import type { TipoObjetivo } from '@/types/perfil'
 
 const LABELS_OBJETIVO: Record<TipoObjetivo, string> = {
@@ -39,8 +42,11 @@ export function DietaFormPage() {
   const { id } = useParams()
   const editando = !!id
   const navigate = useNavigate()
+  const location = useLocation()
+  const rascunhoIa = location.state as { rascunhoIaId?: number; dados?: RascunhoDietaDados } | null
   const [preview, setPreview] = useState<MetaNutricionalCalculadaDTO | null>(null)
   const [calculando, setCalculando] = useState(false)
+  const [alimentosCatalogo, setAlimentosCatalogo] = useState<AlimentoResponseDTO[]>([])
 
   const form = useForm<DietaFormValues>({
     resolver: zodResolver(dietaSchema),
@@ -87,8 +93,9 @@ export function DietaFormPage() {
 
   // Sugestão leve, sem acoplamento rígido: se o módulo de Progresso já tiver um peso registrado,
   // pré-preenche o campo (o usuário pode ajustar livremente). Se não houver registro, ignora.
+  // Pulado quando a dieta já vem de uma sugestão da IA (que já traz seu próprio pesoReferenciaKg).
   useEffect(() => {
-    if (editando) return
+    if (editando || rascunhoIa?.dados) return
     getUltimoProgresso()
       .then((ultimo) => {
         if (!form.getValues('pesoReferenciaKg')) {
@@ -96,7 +103,40 @@ export function DietaFormPage() {
         }
       })
       .catch(() => {})
-  }, [editando, form])
+  }, [editando, rascunhoIa, form])
+
+  // Chegou a partir de uma sugestão do Assistente IA ("Editar e salvar"): busca o catálogo de alimentos
+  // (só temos os ids no rascunho) e pré-preenche o formulário, que o usuário revisa antes de confirmar.
+  useEffect(() => {
+    if (editando || !rascunhoIa?.dados) return
+    buscarAlimentos().then(setAlimentosCatalogo)
+  }, [editando, rascunhoIa])
+
+  useEffect(() => {
+    if (editando || !rascunhoIa?.dados || alimentosCatalogo.length === 0) return
+    const dados = rascunhoIa.dados
+    reset({
+      nome: dados.nome,
+      calculoAutomatico: dados.calculoAutomatico,
+      pesoReferenciaKg: dados.pesoReferenciaKg ? String(dados.pesoReferenciaKg) : '',
+      nivelAtividade: dados.nivelAtividade ?? undefined,
+      tipoObjetivoReferencia: dados.tipoObjetivoReferencia ?? undefined,
+      metaCaloriasKcal: dados.metaCaloriasKcal ? String(dados.metaCaloriasKcal) : '',
+      metaProteinaG: dados.metaProteinaG ? String(dados.metaProteinaG) : '',
+      metaCarboidratoG: dados.metaCarboidratoG ? String(dados.metaCarboidratoG) : '',
+      metaGorduraG: dados.metaGorduraG ? String(dados.metaGorduraG) : '',
+      metaAguaMl: dados.metaAguaMl ? String(dados.metaAguaMl) : '',
+      refeicoes: dados.refeicoes.map((refeicao) => ({
+        nome: refeicao.nome,
+        horarioSugerido: refeicao.horarioSugerido ?? '',
+        alimentos: refeicao.alimentos.map((item) => ({
+          alimentoId: String(item.alimentoId),
+          alimentoNome: alimentosCatalogo.find((a) => a.id === item.alimentoId)?.nome ?? `Alimento #${item.alimentoId}`,
+          quantidadeGramas: String(item.quantidadeGramas),
+        })),
+      })),
+    })
+  }, [editando, rascunhoIa, alimentosCatalogo, reset])
 
   async function handleCalcularPreview() {
     const peso = form.getValues('pesoReferenciaKg')
@@ -139,6 +179,8 @@ export function DietaFormPage() {
 
     if (editando) {
       await atualizarDieta(Number(id), payload)
+    } else if (rascunhoIa?.rascunhoIaId) {
+      await confirmarRascunhoDieta(rascunhoIa.rascunhoIaId, payload)
     } else {
       await criarDieta(payload)
     }
@@ -164,7 +206,9 @@ export function DietaFormPage() {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card className="glass border-0">
             <CardHeader>
-              <CardTitle>{editando ? 'Editar dieta' : 'Nova dieta'}</CardTitle>
+              <CardTitle>
+                {editando ? 'Editar dieta' : rascunhoIa?.rascunhoIaId ? 'Revisar sugestão da IA' : 'Nova dieta'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <FormProvider {...form}>

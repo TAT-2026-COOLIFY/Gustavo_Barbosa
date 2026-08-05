@@ -67,22 +67,22 @@ types/<modulo>.ts   interfaces espelhando os DTOs do backend
 | 2 | **Perfil**: dados pessoais (altura, sexo, data nasc., nível experiência, bio), foto de perfil, Objetivo (tipo + peso meta + data alvo, um ativo por vez) | `79cf027` |
 | 3 | **Treinos**: CRUD, templates do sistema, duplicar, favoritar, grupos musculares, execução com cronômetro + registro de séries (`SessaoTreino`/`SerieExecutada`), histórico, volume semanal | `371ca45` |
 | 4 | **Dietas**: catálogo de alimentos (~50 seed TACO + personalizados), CRUD de dieta com refeições/itens, **cálculo automático de metas** (TMB Mifflin-St Jeor + fator atividade + Strategy por objetivo via `EstrategiaMetaNutricionalFactory`), diário alimentar (`RegistroRefeicao`, separado do plano), 22 testes unitários novos | `6a00e3c` |
+| 5 | **Hidratação**: meta diária de água (`MetaHidratacao`, padrão "um ativo por vez", default 2000ml auto-criado), registro de consumo (`RegistroHidratacao`, um por copo/clique, com desfazer), resumo do dia (total/meta/percentual), histórico dos últimos N dias com gráfico de barras (sem lib externa, SVG/CSS puro), sequência de dias consecutivos batendo a meta, 7 testes unitários novos | `9244cc9` |
 
-Pacotes/pastas **já criadas mas ainda vazias** (placeholders arquiteturais para as próximas fases): backend `ai/`, `dashboard/`, `hidratacao/`, `meditacao/`, `notificacao/`, `progresso/`; frontend `features/dashboard` (só tem `DashboardPlaceholderPage`), `features/hidratacao`, `features/ia`, `features/meditacao`, `features/notificacoes`, `features/progresso`.
+Pacotes/pastas **já criadas mas ainda vazias** (placeholders arquiteturais para as próximas fases): backend `ai/`, `dashboard/`, `meditacao/`, `notificacao/`, `progresso/`; frontend `features/dashboard` (só tem `DashboardPlaceholderPage`), `features/ia`, `features/meditacao`, `features/notificacoes`, `features/progresso`.
 
-Rotas atuais (`frontend/src/routes.tsx`): `/`, `/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` (públicas) + `/app` (dashboard placeholder), `/perfil`, `/treinos`, `/treinos/novo`, `/treinos/:id/editar`, `/treinos/execucao/:sessaoId`, `/treinos/historico`, `/dietas`, `/dietas/novo`, `/dietas/:id/editar`, `/dietas/diario` (protegidas).
+Rotas atuais (`frontend/src/routes.tsx`): `/`, `/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` (públicas) + `/app` (dashboard placeholder), `/perfil`, `/treinos`, `/treinos/novo`, `/treinos/:id/editar`, `/treinos/execucao/:sessaoId`, `/treinos/historico`, `/dietas`, `/dietas/novo`, `/dietas/:id/editar`, `/dietas/diario`, `/hidratacao` (protegidas).
 
 ## O que falta fazer
 
 Ordem sugerida (deixando o Dashboard real por último de propósito — ele agrega dados de todos os outros módulos, então implementá-lo cedo geraria retrabalho):
 
-1. **Hidratação**: meta diária de água, botão +250ml, histórico, gráfico, sequência de dias consecutivos
-2. **Progresso**: peso, fotos de evolução, IMC, % gordura, massa magra, circunferências, gráficos comparativos — **nenhum campo de peso atual/IMC existe ainda em lugar nenhum do sistema**, este módulo é quem deve introduzir isso (histórico de peso), possivelmente alimentando `pesoReferenciaKg` da Dieta como sugestão
-3. **IA**: assistente conversacional (integração com API OpenAI ou Claude) que gera treino/dieta/dicas a partir de uma conversa com o usuário — nenhuma integração de IA existe ainda no projeto (sem SDK, sem chave de API configurada); `OrigemTreino`/`OrigemDieta` já têm o valor `IA` no enum, preparado para quando esse módulo existir
-4. **Meditação**: sessões guiadas, tempo, respiração, histórico
-5. **Notificações**: água, treino, refeição, metas
-6. **Dashboard real**: substituir `DashboardPlaceholderPage` — saudação, IMC, peso, objetivo, água, treino do dia, refeições/calorias/macros, gráficos semanal/mensal, dias consecutivos, conquistas (depende de 1-5 já existirem)
-7. **Testes & Documentação** (fase dedicada, ao final): testes de integração cobrindo todos os módulos (hoje só `dieta` tem testes unitários; `auth`/`perfil`/`treino` não têm nenhum teste), README profissional, DER, diagrama de classes/UML, diagrama de casos de uso, fluxogramas
+1. **Progresso**: peso, fotos de evolução, IMC, % gordura, massa magra, circunferências, gráficos comparativos — **nenhum campo de peso atual/IMC existe ainda em lugar nenhum do sistema**, este módulo é quem deve introduzir isso (histórico de peso), possivelmente alimentando `pesoReferenciaKg` da Dieta como sugestão
+2. **IA**: assistente conversacional (integração com API OpenAI ou Claude) que gera treino/dieta/dicas a partir de uma conversa com o usuário — nenhuma integração de IA existe ainda no projeto (sem SDK, sem chave de API configurada); `OrigemTreino`/`OrigemDieta` já têm o valor `IA` no enum, preparado para quando esse módulo existir
+3. **Meditação**: sessões guiadas, tempo, respiração, histórico
+4. **Notificações**: água, treino, refeição, metas
+5. **Dashboard real**: substituir `DashboardPlaceholderPage` — saudação, IMC, peso, objetivo, água, treino do dia, refeições/calorias/macros, gráficos semanal/mensal, dias consecutivos, conquistas (depende de 1-4 já existirem)
+6. **Testes & Documentação** (fase dedicada, ao final): testes de integração cobrindo todos os módulos (hoje `dieta` e `hidratacao` têm testes unitários; `auth`/`perfil`/`treino` não têm nenhum teste), README profissional, DER, diagrama de classes/UML, diagrama de casos de uso, fluxogramas
 
 ## Como rodar
 

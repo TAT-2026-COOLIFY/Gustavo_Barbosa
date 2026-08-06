@@ -1,4 +1,14 @@
-export type GrupoMuscular = 'PEITO' | 'COSTAS' | 'PERNAS' | 'OMBROS' | 'BRACOS' | 'ABDOMEN' | 'CARDIO' | 'CORPO_INTEIRO'
+export type GrupoMuscular =
+  | 'PEITO'
+  | 'COSTAS'
+  | 'PERNAS'
+  | 'OMBROS'
+  | 'BRACOS'
+  | 'ANTEBRACO'
+  | 'TRAPEZIO'
+  | 'ABDOMEN'
+  | 'CARDIO'
+  | 'CORPO_INTEIRO'
 export type OrigemTreino = 'MANUAL' | 'TEMPLATE' | 'IA'
 
 export interface ExercicioResponseDTO {

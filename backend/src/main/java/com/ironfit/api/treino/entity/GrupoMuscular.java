@@ -6,6 +6,8 @@ public enum GrupoMuscular {
     PERNAS,
     OMBROS,
     BRACOS,
+    ANTEBRACO,
+    TRAPEZIO,
     ABDOMEN,
     CARDIO,
     CORPO_INTEIRO

@@ -4,7 +4,7 @@ TCC (ADS) full-stack: backend Spring Boot + frontend React. Projeto construído 
 
 ## Resumo geral do progresso (para retomar rapidamente)
 
-**10 fases concluídas (0 a 9)**, todas com backend + frontend integrados, testados e commitados — cada uma virou um módulo completo de ponta a ponta antes de passar pra próxima. A jornada até aqui, em ordem:
+**11 fases concluídas (0 a 10)**, todas com backend + frontend integrados, testados e commitados — cada uma virou um módulo completo de ponta a ponta antes de passar pra próxima. A jornada até aqui, em ordem:
 
 0. Scaffolding do projeto (Spring Boot 4 + Vite/React/TS).
 1. **Auth** — cadastro, login com JWT+refresh token, logout, recuperação de senha.
@@ -16,8 +16,9 @@ TCC (ADS) full-stack: backend Spring Boot + frontend React. Projeto construído 
 7. **IA** — assistente conversacional via OpenAI; gera *rascunhos* de treino/dieta que o usuário revisa e confirma antes de qualquer gravação real (nunca grava sozinha).
 8. **Meditação** — catálogo de sessões guiadas, execução com cronômetro e animação de respiração, histórico.
 9. **Notificações** — central in-app (água/treino/refeição/metas), gerada sob demanda, sem push nem job agendado.
+10. **Dashboard real** — substitui a tela placeholder; agrega IMC/peso/objetivo/água/treino/dieta/meditação/notificações/rascunho de IA pendente de todos os módulos anteriores num único `GET /api/dashboard`, gráficos e conquistas computadas sob demanda.
 
-**O que falta** (só isso): (1) **Dashboard real** substituindo a tela placeholder — agora que todos os módulos que ele agrega já existem, não há mais motivo pra adiar; (2) fase final de **Testes & Documentação** (testes de integração, README, DER, UML, casos de uso); (3) **testar a IA de ponta a ponta** quando o usuário configurar sua própria chave da OpenAI (adiado por escolha dele — ver seção "Como rodar").
+**O que falta** (só isso): (1) fase final de **Testes & Documentação** (testes de integração, README, DER, UML, casos de uso — hoje só há testes unitários); (2) **testar a IA de ponta a ponta** quando o usuário configurar sua própria chave da OpenAI (adiado por escolha dele — ver seção "Como rodar").
 
 Detalhes de cada fase (arquivos, decisões técnicas, hash do commit) estão na tabela abaixo e em "Decisões arquiteturais notáveis". Antes de continuar em uma nova sessão: leia este resumo, confira `git log --oneline -15` pra confirmar que bate com a tabela, e comece pela próxima fase da lista "O que falta fazer".
 
@@ -74,7 +75,7 @@ features/<modulo>/
 types/<modulo>.ts   interfaces espelhando os DTOs do backend
 ```
 - `lib/axiosClient.ts`: baseURL `/api`, token de acesso em memória, refresh token em localStorage, interceptor renova token em 401 automaticamente
-- Cada página autenticada renderiza seu próprio header (botão voltar + `ThemeToggle`) — não existe ainda um shell/nav compartilhado (fica para quando o Dashboard real for construído)
+- Cada página autenticada renderiza seu próprio header (botão voltar + `ThemeToggle`) — não existe shell/nav compartilhado; o cluster de ícones de navegação (treinos/dietas/hidratação/progresso/ia/meditação/perfil/sair + sininho de notificações) mora hoje só no header do próprio `DashboardPage`
 - Estilo visual: classe utilitária `.glass` (glassmorphism, definida em `index.css`) + `Button variant="glass"`, cards com `Card className="glass border-0"`, fundo com blur decorativo (`blur-[110px]`) atrás do conteúdo, `framer-motion` fade+slide de entrada em toda página
 
 ## O que já foi implementado
@@ -91,18 +92,18 @@ types/<modulo>.ts   interfaces espelhando os DTOs do backend
 | 7 | **IA**: assistente conversacional via OpenAI (chat completions, `response_format: json_object`), histórico de conversas/mensagens persistido (`ConversaIa`/`MensagemIa`), prompt inclui o catálogo real de exercícios/alimentos (o modelo só pode sugerir ids existentes), **fluxo de rascunho para revisão**: sugestão de treino/dieta vira `RascunhoIa` (`PENDENTE`), usuário revisa em `/treinos/novo` ou `/dietas/novo` já pré-preenchido e só confirmar cria o Treino/Dieta de verdade com `origem=IA` (`TreinoService`/`DietaService` ganharam overload `criar(usuarioId, request, origem)`); sem chave de API configurada nesta sessão (ver `OPENAI_API_KEY` em "Como rodar"), integração construída e testada via mock do client, nunca chamada de verdade ainda; 10 testes unitários novos | `09c7d8f` |
 | 8 | **Meditação**: catálogo de sessões guiadas do sistema (`Meditacao`, 9 sessões seed em 5 tipos — sem versão privada por usuário, escopo não pedia), execução com cronômetro (`SessaoMeditacao`, mesmo padrão iniciar/concluir de `SessaoTreino`), animação de respiração guiada (inspirar/segurar/expirar em CSS puro, sem lib) para sessões do tipo `RESPIRACAO`, histórico e sequência de dias consecutivos, 6 testes unitários novos | `da9ebdb` |
 | 9 | **Notificações**: central in-app (`Notificacao`, sem push do navegador — sem service worker/infra pra isso no projeto), geradas sob demanda (sem job agendado) sempre que `GET /api/notificacoes` é chamado: água (nenhum registro hoje / meta batida), treino (nenhuma sessão concluída hoje, só se o usuário tiver algum treino cadastrado), refeição (dieta ativa com refeições planejadas mas nenhuma registrada hoje) — dedupe por tipo+dia via `existsByUsuarioIdAndTipoAndCriadoEmAfter`; sininho com contador de não lidas no dashboard placeholder; 9 testes unitários novos | `bd9cd24` |
+| 10 | **Dashboard real**: substitui `DashboardPlaceholderPage`. `DashboardService` (pacote `dashboard/`, só `controller`/`dto`/`service` — sem entity/repository/mapper próprios) injeta os services/repositories já existentes de 8 módulos (`ProgressoService`, `ObjetivoService`, `HidratacaoService`, `SessaoTreinoRepository`+`ExecucaoTreinoService`, `DiarioService`, `ExecucaoMeditacaoService`, `NotificacaoService`, `RascunhoIaRepository` — este ganhou `existsByUsuarioIdAndStatus`, único método novo fora do pacote `dashboard/`) e agrega tudo num único `GET /api/dashboard`; captura `ResourceNotFoundException` por seção (progresso/objetivo/dieta ativa) pra usuário novo não quebrar nada; conquistas computadas sob demanda (mesmo princípio de Notificações, nada persistido). Frontend: `DashboardPage` reaproveita componentes de gráfico já prontos de outros módulos (`HistoricoAguaChart`, `PesoChart`, `MacroProgressBar`) em vez de duplicá-los, só `CaloriasChart` é novo (mesmo padrão de barras); 3 testes unitários novos. **Achado por teste manual, não pelos testes unitários com mock**: `montar()` não pode ser `@Transactional(readOnly = true)` — `HidratacaoService` cria a meta padrão (2000ml) do usuário na primeira chamada, uma escrita real, e herdar o modo read-only da transação externa fazia o INSERT falhar no Postgres pra todo usuário novo. De brinde, corrigido um teste pré-existente de Hidratação (`HidratacaoServiceTest`) que tinha uma data hardcoded (`LocalDate.of(2026, 8, 5)`) e quebrava sozinho a cada virada de dia. | `73302ee` |
 
-Pacotes/pastas **já criadas mas ainda vazias** (placeholders arquiteturais para as próximas fases): backend `dashboard/`; frontend `features/dashboard` (só tem `DashboardPlaceholderPage`).
+Pacotes/pastas **já criadas mas ainda vazias** (placeholders arquiteturais para as próximas fases): nenhum — todos os módulos de produto do escopo já existem.
 
-Rotas atuais (`frontend/src/routes.tsx`): `/`, `/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` (públicas) + `/app` (dashboard placeholder), `/perfil`, `/treinos`, `/treinos/novo`, `/treinos/:id/editar`, `/treinos/execucao/:sessaoId`, `/treinos/historico`, `/dietas`, `/dietas/novo`, `/dietas/:id/editar`, `/dietas/diario`, `/hidratacao`, `/progresso`, `/ia`, `/meditacao`, `/meditacao/execucao/:sessaoId`, `/meditacao/historico`, `/notificacoes` (protegidas).
+Rotas atuais (`frontend/src/routes.tsx`): `/`, `/login`, `/cadastro`, `/esqueci-senha`, `/redefinir-senha` (públicas) + `/app` (dashboard real), `/perfil`, `/treinos`, `/treinos/novo`, `/treinos/:id/editar`, `/treinos/execucao/:sessaoId`, `/treinos/historico`, `/dietas`, `/dietas/novo`, `/dietas/:id/editar`, `/dietas/diario`, `/hidratacao`, `/progresso`, `/ia`, `/meditacao`, `/meditacao/execucao/:sessaoId`, `/meditacao/historico`, `/notificacoes` (protegidas).
 
 ## O que falta fazer
 
-Só resta um item antes da fase final de testes/documentação:
+Só resta a fase final:
 
-1. **Dashboard real**: substituir `DashboardPlaceholderPage` — saudação, IMC, peso, objetivo, água, treino do dia, refeições/calorias/macros, gráficos semanal/mensal, dias consecutivos, conquistas (todos os módulos que ele agrega já existem agora)
-2. **Testes & Documentação** (fase dedicada, ao final): testes de integração cobrindo todos os módulos (hoje `dieta`, `hidratacao`, `progresso`, `ia`, `meditacao` e `notificacao` têm testes unitários; `auth`/`perfil`/`treino` não têm nenhum teste), README profissional, DER, diagrama de classes/UML, diagrama de casos de uso, fluxogramas
-3. **Testar a integração de IA de ponta a ponta** assim que houver uma chave da OpenAI disponível (ver `OPENAI_API_KEY` em "Como rodar") — hoje só validada com o client mockado
+1. **Testes & Documentação**: testes de integração cobrindo todos os módulos (hoje `dieta`, `hidratacao`, `progresso`, `ia`, `meditacao`, `notificacao` e `dashboard` têm testes unitários; `auth`/`perfil`/`treino` não têm nenhum teste), README profissional, DER, diagrama de classes/UML, diagrama de casos de uso, fluxogramas
+2. **Testar a integração de IA de ponta a ponta** assim que houver uma chave da OpenAI disponível (ver `OPENAI_API_KEY` em "Como rodar") — hoje só validada com o client mockado
 
 ## Como rodar
 
@@ -131,7 +132,7 @@ export OPENAI_BASE_URL=https://api.openai.com/v1  # opcional, útil pra apontar 
 ## Decisões arquiteturais notáveis (não óbvias pelo código)
 
 - **Sem lib de estado/data-fetching no frontend** é intencional, não esquecimento — mantém o projeto simples de explicar na banca. Novas features devem seguir o mesmo padrão (`useState`+`useEffect`+`api/*.ts`), não introduzir React Query/Zustand no meio do caminho.
-- **Dashboard fica por último** de propósito (ver seção "O que falta fazer").
+- **Dashboard ficou por último** de propósito — só fazia sentido depois que todos os módulos que ele agrega existiam de verdade (ver Fase 10). `DashboardService` não abre transação própria (nada de `@Transactional` no método `montar`): ele só orquestra services de outros módulos que já gerenciam sua própria transação, e alguns deles escrevem (ex.: `HidratacaoService` cria a meta padrão do usuário na primeira chamada). Um agregador `@Transactional(readOnly = true)` chamando um service que precisa escrever quebra com "cannot execute INSERT in a read-only transaction" — vale lembrar disso em qualquer outro endpoint agregador que vier a existir.
 - **Módulo Dieta não tem FK para Progresso**: guarda um snapshot (`pesoReferenciaKg`, `nivelAtividade`) na própria `Dieta` em vez de uma referência a `RegistroProgresso`. Agora que Progresso existe, `DietaFormPage` busca `GET /progresso/ultimo` só no frontend (best-effort, ignora 404) para pré-preencher `pesoReferenciaKg` de uma dieta nova — integração só de UX, sem acoplamento no backend.
 - **Sem repositório remoto configurado** (`git remote -v` vazio) — todo o progresso está apenas no `.git` local desta máquina. Sugerir ao usuário configurar um remoto (GitHub) para backup fora da máquina é válido a qualquer momento.
 - **Spring Boot 4 usa Jackson 3 por padrão** (`tools.jackson.databind.ObjectMapper`, não `com.fasterxml.jackson`), e não há bean de `RestClient.Builder` auto-configurado com os starters atuais. O módulo `ia` precisava especificamente de Jackson 2 clássico (`JsonNode`, `treeToValue`) e por isso declara seu próprio bean `ObjectMapper` em `IaJacksonConfig` (Jackson 2 já está no classpath via springdoc/jjwt) e constrói o `RestClient` direto via `RestClient.builder()` em vez de injetar `RestClient.Builder`. Ao integrar qualquer outra API externa, não presuma que esses beans do Spring Boot 3 "de sempre" existem — confira primeiro.

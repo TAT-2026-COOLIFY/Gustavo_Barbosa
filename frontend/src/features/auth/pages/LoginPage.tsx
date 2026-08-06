@@ -8,6 +8,7 @@ import { isAxiosError } from 'axios'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PasswordInput } from '@/components/ui/password-input'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { loginSchema, type LoginFormValues } from '@/features/auth/schemas/authSchemas'
@@ -73,9 +74,8 @@ export function LoginPage() {
                 Esqueci minha senha
               </Link>
             </div>
-            <Input
+            <PasswordInput
               id="senha"
-              type="password"
               autoComplete="current-password"
               aria-invalid={!!errors.senha}
               {...register('senha')}

@@ -1,5 +1,6 @@
 package com.ironfit.api.auth.service;
 
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,14 @@ public class LoggingPasswordResetMailService implements PasswordResetMailService
 
     @Value("${ironfit.mail.frontend-base-url}")
     private String frontendBaseUrl;
+
+    @PostConstruct
+    void logAtivacao() {
+        log.warn(
+                "[MAIL] Envio real de e-mail DESATIVADO (MAIL_USERNAME não definido) — links de redefinição de senha"
+                        + " só serão registrados aqui no log, ninguém recebe e-mail de verdade. Ver 'Como rodar' no"
+                        + " CLAUDE.md para configurar MAIL_USERNAME/MAIL_PASSWORD.");
+    }
 
     @Override
     public void enviarLinkRedefinicao(String destinatario, String nomeUsuario, String tokenBruto) {

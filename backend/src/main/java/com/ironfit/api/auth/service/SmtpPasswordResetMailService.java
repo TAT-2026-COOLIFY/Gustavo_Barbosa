@@ -1,5 +1,6 @@
 package com.ironfit.api.auth.service;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -35,6 +36,13 @@ public class SmtpPasswordResetMailService implements PasswordResetMailService {
         this.mailSender = mailSender;
     }
 
+    @PostConstruct
+    void logAtivacao() {
+        // Confirma no startup, sem ambiguidade, qual das duas implementações da Strategy está no ar
+        // (fácil de checar sem precisar adivinhar se MAIL_USERNAME foi realmente lido pelo processo).
+        log.info("[MAIL] Envio real de e-mail ATIVO (SmtpPasswordResetMailService) — remetente configurado via MAIL_FROM/MAIL_USERNAME");
+    }
+
     @Override
     public void enviarLinkRedefinicao(String destinatario, String nomeUsuario, String tokenBruto) {
         String link = frontendBaseUrl + "/redefinir-senha?token=" + tokenBruto;
@@ -49,10 +57,11 @@ public class SmtpPasswordResetMailService implements PasswordResetMailService {
             helper.setText(textoTextoSimples(nomeUsuario, link), corpoHtml(nomeUsuario, link));
 
             mailSender.send(mensagem);
+            log.info("[MAIL] E-mail de redefinição de senha enviado com sucesso para {}", destinatario);
         } catch (MessagingException | MailException e) {
             // Não relança: solicitarRedefinicao() nunca deve revelar ao chamador se o envio falhou
             // (mesma resposta para e-mail existente ou não). O erro fica registrado para diagnóstico.
-            log.error("Falha ao enviar e-mail de redefinição de senha para {}", destinatario, e);
+            log.error("[MAIL] Falha ao enviar e-mail de redefinição de senha para {}", destinatario, e);
         }
     }
 

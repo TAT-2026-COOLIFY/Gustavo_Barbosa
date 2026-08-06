@@ -34,7 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class HidratacaoServiceTest {
 
     private static final Long USUARIO_ID = 1L;
-    private static final LocalDate HOJE = LocalDate.of(2026, 8, 5);
+    private static final LocalDate HOJE = LocalDate.now();
 
     @Mock
     private MetaHidratacaoRepository metaHidratacaoRepository;

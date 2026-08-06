@@ -6,7 +6,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { CadastroPage } from '@/features/auth/pages/CadastroPage'
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
-import { DashboardPlaceholderPage } from '@/features/dashboard/pages/DashboardPlaceholderPage'
+import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { PerfilPage } from '@/features/perfil/pages/PerfilPage'
 import { TreinosListPage } from '@/features/treinos/pages/TreinosListPage'
 import { TreinoFormPage } from '@/features/treinos/pages/TreinoFormPage'
@@ -33,7 +33,7 @@ export function AppRoutes() {
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/app" element={<DashboardPlaceholderPage />} />
+        <Route path="/app" element={<DashboardPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
         <Route path="/treinos" element={<TreinosListPage />} />
         <Route path="/treinos/novo" element={<TreinoFormPage />} />

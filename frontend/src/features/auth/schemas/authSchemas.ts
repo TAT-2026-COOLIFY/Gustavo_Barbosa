@@ -23,6 +23,7 @@ export type CadastroFormValues = z.infer<typeof cadastroSchema>
 export const loginSchema = z.object({
   email: z.string().min(1, 'E-mail é obrigatório').email('E-mail inválido'),
   senha: z.string().min(1, 'Senha é obrigatória'),
+  lembrar: z.boolean(),
 })
 
 export type LoginFormValues = z.infer<typeof loginSchema>

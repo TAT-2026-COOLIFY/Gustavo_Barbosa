@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
 
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
@@ -18,15 +19,16 @@ export function LoginPage() {
   const [erroGeral, setErroGeral] = useState<string | null>(null)
 
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) })
+  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema), defaultValues: { lembrar: true } })
 
   async function onSubmit(values: LoginFormValues) {
     setErroGeral(null)
     try {
-      await entrar(values.email, values.senha)
+      await entrar(values.email, values.senha, values.lembrar)
       navigate('/app', { replace: true })
     } catch (error) {
       if (isAxiosError(error) && error.response?.status === 401) {
@@ -81,6 +83,19 @@ export function LoginPage() {
               {...register('senha')}
             />
             {errors.senha && <p className="text-xs text-destructive">{errors.senha.message}</p>}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Controller
+              control={control}
+              name="lembrar"
+              render={({ field }) => (
+                <Checkbox id="lembrar" checked={field.value} onCheckedChange={field.onChange} />
+              )}
+            />
+            <Label htmlFor="lembrar" className="cursor-pointer text-sm font-normal text-muted-foreground">
+              Lembrar minha conta neste dispositivo
+            </Label>
           </div>
 
           {erroGeral && <p className="text-sm text-destructive">{erroGeral}</p>}

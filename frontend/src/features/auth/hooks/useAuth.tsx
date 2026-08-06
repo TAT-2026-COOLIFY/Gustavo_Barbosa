@@ -7,7 +7,7 @@ import type { LoginResponseDTO, UsuarioResponseDTO } from '@/types/auth'
 interface AuthContextValue {
   usuario: UsuarioResponseDTO | null
   status: 'loading' | 'authenticated' | 'unauthenticated'
-  entrar: (email: string, senha: string) => Promise<void>
+  entrar: (email: string, senha: string, lembrar: boolean) => Promise<void>
   cadastrar: (nome: string, email: string, senha: string) => Promise<void>
   sair: () => Promise<void>
 }
@@ -50,10 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function entrar(email: string, senha: string) {
+  async function entrar(email: string, senha: string, lembrar: boolean) {
     const data = await authApi.login({ email, senha })
     setAccessToken(data.accessToken)
-    setRefreshToken(data.refreshToken)
+    setRefreshToken(data.refreshToken, lembrar)
     setUsuario(data.usuario)
     setStatus('authenticated')
   }
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function cadastrar(nome: string, email: string, senha: string) {
     const data = await authApi.cadastrar({ nome, email, senha })
     setAccessToken(data.accessToken)
-    setRefreshToken(data.refreshToken)
+    setRefreshToken(data.refreshToken, true)
     setUsuario(data.usuario)
     setStatus('authenticated')
   }

@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Plus, Pencil } from 'lucide-react'
+import { Camera, ImageIcon, Plus, Pencil } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { registrarProgresso, atualizarProgresso } from '@/features/progresso/api/progressoApi'
+import { atualizarFotoProgresso, registrarProgresso, atualizarProgresso } from '@/features/progresso/api/progressoApi'
 import { registroProgressoSchema, type RegistroProgressoFormValues } from '@/features/progresso/schemas/progressoSchemas'
 import type { RegistroProgressoResponseDTO } from '@/types/progresso'
 
@@ -28,6 +28,11 @@ interface RegistroProgressoDialogProps {
 export function RegistroProgressoDialog({ registro, onSalvo }: RegistroProgressoDialogProps) {
   const editando = !!registro
   const [open, setOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [arquivoFoto, setArquivoFoto] = useState<File | null>(null)
+  const [previewLocal, setPreviewLocal] = useState<string | null>(null)
+
+  const fotoExibida = previewLocal ?? registro?.fotoUrl ?? null
 
   const {
     register,
@@ -51,6 +56,27 @@ export function RegistroProgressoDialog({ registro, onSalvo }: RegistroProgresso
       : undefined,
   })
 
+  function limparFotoPendente() {
+    if (previewLocal) URL.revokeObjectURL(previewLocal)
+    setArquivoFoto(null)
+    setPreviewLocal(null)
+  }
+
+  function handleSelecionarFoto(event: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = event.target.files?.[0]
+    event.target.value = ''
+    if (!arquivo) return
+
+    if (previewLocal) URL.revokeObjectURL(previewLocal)
+    setArquivoFoto(arquivo)
+    setPreviewLocal(URL.createObjectURL(arquivo))
+  }
+
+  function handleOpenChange(novoAberto: boolean) {
+    setOpen(novoAberto)
+    if (!novoAberto) limparFotoPendente()
+  }
+
   async function onSubmit(values: RegistroProgressoFormValues) {
     const input = {
       dataRegistro: values.dataRegistro || null,
@@ -64,14 +90,23 @@ export function RegistroProgressoDialog({ registro, onSalvo }: RegistroProgresso
       observacoes: values.observacoes || null,
     }
 
-    const salvo = editando ? await atualizarProgresso(registro.id, input) : await registrarProgresso(input)
+    let salvo = editando ? await atualizarProgresso(registro.id, input) : await registrarProgresso(input)
+
+    // O upload da foto só pode acontecer depois de salvar, porque a API precisa do id do registro
+    // (que só existe depois do POST/PUT acima) — por isso a foto escolhida fica "pendente" até aqui.
+    if (arquivoFoto) {
+      const { fotoUrl: novaUrl } = await atualizarFotoProgresso(salvo.id, arquivoFoto)
+      salvo = { ...salvo, fotoUrl: novaUrl }
+    }
+
     onSalvo(salvo)
+    limparFotoPendente()
     if (!editando) reset({ pesoKg: '', dataRegistro: '' })
     setOpen(false)
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {editando ? (
           <Button variant="ghost" size="icon" aria-label="Editar registro">
@@ -93,6 +128,39 @@ export function RegistroProgressoDialog({ registro, onSalvo }: RegistroProgresso
         </DialogHeader>
 
         <form className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <div className="flex flex-col gap-1.5">
+            <Label>Foto de evolução</Label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="group relative size-16 shrink-0 overflow-hidden rounded-lg border border-border bg-muted/40"
+                aria-label="Selecionar foto"
+              >
+                {fotoExibida ? (
+                  <img src={fotoExibida} alt="Prévia da foto de evolução" className="size-full object-cover" />
+                ) : (
+                  <span className="flex size-full items-center justify-center text-muted-foreground">
+                    <ImageIcon className="size-5" />
+                  </span>
+                )}
+                <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Camera className="size-4 text-white" />
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleSelecionarFoto}
+                />
+              </button>
+              <p className="text-xs text-muted-foreground">
+                {arquivoFoto ? arquivoFoto.name : 'Clique na miniatura para escolher uma foto (opcional).'}
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="dataRegistro">Data</Label>

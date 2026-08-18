@@ -81,7 +81,10 @@ export function DashboardPage() {
 
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <div className="flex items-center justify-between">
-          <div />
+          <div className="-ml-2 flex items-center gap-2">
+            <img src="/favicon.svg" alt="" className="size-9 drop-shadow-lg" />
+            <span className="font-brand text-xl font-bold tracking-tight text-foreground">IronFit</span>
+          </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button asChild variant="glass" size="icon" className="relative">

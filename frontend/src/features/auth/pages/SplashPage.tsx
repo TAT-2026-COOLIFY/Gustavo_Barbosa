@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Dumbbell } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
@@ -23,8 +22,8 @@ export function SplashPage() {
         transition={{ duration: 0.6, ease: 'easeOut' }}
         className="glass flex w-full max-w-md flex-col items-center gap-6 rounded-2xl px-8 py-12 text-center shadow-xl"
       >
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-          <Dumbbell className="size-8" />
+        <div className="flex size-16 items-center justify-center">
+          <img src="/favicon.svg" alt="IronFit" className="size-16 drop-shadow-lg" />
         </div>
 
         <div className="space-y-2">

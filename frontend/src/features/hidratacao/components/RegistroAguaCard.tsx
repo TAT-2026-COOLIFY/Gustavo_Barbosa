@@ -1,7 +1,7 @@
 import { Plus, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
+import { CopoAguaAnimado } from '@/features/hidratacao/components/CopoAguaAnimado'
 import { MetaAguaDialog } from '@/features/hidratacao/components/MetaAguaDialog'
 import type { MetaHidratacaoResponseDTO, ResumoDiaHidratacaoResponseDTO } from '@/types/hidratacao'
 
@@ -13,24 +13,31 @@ interface RegistroAguaCardProps {
   onRemover: (registroId: number) => void
   onMetaAtualizada: (meta: MetaHidratacaoResponseDTO) => void
   adicionando: boolean
+  pulseKey: number
 }
 
-export function RegistroAguaCard({ resumo, onAdicionar, onRemover, onMetaAtualizada, adicionando }: RegistroAguaCardProps) {
+export function RegistroAguaCard({
+  resumo,
+  onAdicionar,
+  onRemover,
+  onMetaAtualizada,
+  adicionando,
+  pulseKey,
+}: RegistroAguaCardProps) {
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-3xl font-semibold">
-            {resumo.totalMl} <span className="text-base font-normal text-muted-foreground">/ {resumo.metaMl} ml</span>
-          </p>
-          <p className="text-sm text-muted-foreground">{resumo.percentual}% da meta de hoje</p>
-        </div>
+      <div className="flex justify-end">
         <MetaAguaDialog metaMl={resumo.metaMl} onAtualizada={onMetaAtualizada} />
       </div>
 
-      <Progress value={resumo.percentual} />
+      <CopoAguaAnimado
+        percentual={resumo.percentual}
+        totalMl={resumo.totalMl}
+        metaMl={resumo.metaMl}
+        pulseKey={pulseKey}
+      />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-2">
         {QUANTIDADES_RAPIDAS.map((quantidade) => (
           <Button key={quantidade} onClick={() => onAdicionar(quantidade)} disabled={adicionando}>
             <Plus className="size-4" />+{quantidade}ml

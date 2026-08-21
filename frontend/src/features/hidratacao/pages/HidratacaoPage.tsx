@@ -22,6 +22,7 @@ export function HidratacaoPage() {
   const [historico, setHistorico] = useState<HistoricoDiaHidratacaoDTO[]>([])
   const [diasConsecutivos, setDiasConsecutivos] = useState(0)
   const [adicionando, setAdicionando] = useState(false)
+  const [pulseKey, setPulseKey] = useState(0)
 
   const carregar = useCallback(async () => {
     const [resumoAtual, historicoAtual, sequenciaAtual] = await Promise.all([
@@ -43,6 +44,7 @@ export function HidratacaoPage() {
     try {
       await registrarConsumo(quantidadeMl)
       await carregar()
+      setPulseKey((chave) => chave + 1)
     } finally {
       setAdicionando(false)
     }
@@ -94,6 +96,7 @@ export function HidratacaoPage() {
                 onRemover={onRemover}
                 onMetaAtualizada={carregar}
                 adicionando={adicionando}
+                pulseKey={pulseKey}
               />
             </CardContent>
           </Card>

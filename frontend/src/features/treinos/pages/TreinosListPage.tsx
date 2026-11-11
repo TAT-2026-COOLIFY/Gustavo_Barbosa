@@ -45,9 +45,13 @@ export function TreinosListPage() {
   }
 
   async function handleExcluir(id: number) {
-    if (!confirm('Excluir este treino?')) return
-    await excluirTreino(id)
-    carregar()
+    if (!confirm('Excluir este treino? O histórico de execuções dele também será apagado.')) return
+    try {
+      await excluirTreino(id)
+      carregar()
+    } catch {
+      alert('Não foi possível excluir o treino. Tente novamente.')
+    }
   }
 
   async function handleToggleFavorito(id: number) {

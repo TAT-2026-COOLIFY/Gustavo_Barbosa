@@ -134,6 +134,98 @@ class IaChatServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void enviarMensagem_promptDeSistemaDeveRestringirEscopoAoIronFit() {
+        stubUsuario();
+        when(openAiChatClient.enviarConversa(anyList()))
+                .thenReturn("{\"resposta\": \"" + IaChatService.MENSAGEM_FORA_DO_ESCOPO + "\", \"sugestao\": null}");
+
+        EnviarMensagemResponseDTO resultado = iaChatService.enviarMensagem(
+                USUARIO_ID, new EnviarMensagemRequestDTO(null, "Quem ganhou a Copa de 2002?"));
+
+        var captor = org.mockito.ArgumentCaptor.forClass(java.util.List.class);
+        verify(openAiChatClient).enviarConversa(captor.capture());
+        java.util.List<com.ironfit.api.ia.client.MensagemChat> enviadas = captor.getValue();
+        String promptSistema = enviadas.get(0).content();
+        assertThat(enviadas.get(0).role()).isEqualTo("system");
+        assertThat(promptSistema).contains("ESCOPO").contains(IaChatService.MENSAGEM_FORA_DO_ESCOPO);
+        assertThat(promptSistema).doesNotContain("%s");
+        assertThat(resultado.mensagemAssistente().conteudo()).isEqualTo(IaChatService.MENSAGEM_FORA_DO_ESCOPO);
+        assertThat(resultado.rascunho()).isNull();
+    }
+
+    @Test
+    void enviarMensagem_modeloMarcaForaDoEscopoMasResponde_backendDeveSubstituirPelaMensagemPadrao() {
+        stubUsuario();
+        when(openAiChatClient.enviarConversa(anyList()))
+                .thenReturn("{\"resposta\": \"2x2 é 4\", \"sugestao\": null, \"foraDoEscopo\": true}");
+
+        EnviarMensagemResponseDTO resultado =
+                iaChatService.enviarMensagem(USUARIO_ID, new EnviarMensagemRequestDTO(null, "quanto é 2x2"));
+
+        assertThat(resultado.mensagemAssistente().conteudo()).isEqualTo(IaChatService.MENSAGEM_FORA_DO_ESCOPO);
+        assertThat(resultado.rascunho()).isNull();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void enviarMensagem_historicoNaoDeveReenviarPerguntasRecusadasEDeveTerminarComLembreteDeEscopo() {
+        ConversaIa conversa = ConversaIa.builder().id(50L).usuario(Usuario.builder().id(USUARIO_ID).build()).build();
+        when(conversaIaRepository.findByIdAndUsuarioId(50L, USUARIO_ID)).thenReturn(Optional.of(conversa));
+        var usuario = com.ironfit.api.ia.entity.PapelMensagemIa.USUARIO;
+        var assistente = com.ironfit.api.ia.entity.PapelMensagemIa.ASSISTENTE;
+        when(mensagemIaRepository.findByConversaIdOrderByCriadoEmAsc(50L))
+                .thenReturn(List.of(
+                        MensagemIa.builder().papel(usuario).conteudo("quantos mortos na 2 guerra").build(),
+                        MensagemIa.builder().papel(assistente).conteudo(IaChatService.MENSAGEM_FORA_DO_ESCOPO).build(),
+                        MensagemIa.builder().papel(usuario).conteudo("quanto de proteína devo comer?").build()));
+        when(openAiChatClient.enviarConversa(anyList()))
+                .thenReturn("{\"resposta\": \"Cerca de 2g/kg.\", \"sugestao\": null, \"foraDoEscopo\": false}");
+
+        iaChatService.enviarMensagem(USUARIO_ID, new EnviarMensagemRequestDTO(50L, "quanto de proteína devo comer?"));
+
+        var captor = org.mockito.ArgumentCaptor.forClass(List.class);
+        verify(openAiChatClient).enviarConversa(captor.capture());
+        List<com.ironfit.api.ia.client.MensagemChat> enviadas = captor.getValue();
+        assertThat(enviadas).extracting(com.ironfit.api.ia.client.MensagemChat::content)
+                .doesNotContain("quantos mortos na 2 guerra", IaChatService.MENSAGEM_FORA_DO_ESCOPO)
+                .contains("quanto de proteína devo comer?");
+        assertThat(enviadas.get(enviadas.size() - 1).role()).isEqualTo("system");
+        assertThat(enviadas.get(enviadas.size() - 1).content()).contains("ESCOPO");
+    }
+
+    @Test
+    void pedeGeracao_detectaPedidoDeTreinoOuDietaNasUltimasMensagensDoUsuario() {
+        var usuario = com.ironfit.api.ia.entity.PapelMensagemIa.USUARIO;
+        var assistente = com.ironfit.api.ia.entity.PapelMensagemIa.ASSISTENTE;
+        var pergunta = MensagemIa.builder().papel(usuario).conteudo("quanta água devo beber?").build();
+        var pedido = MensagemIa.builder().papel(usuario).conteudo("Monte uma DIETA pra mim").build();
+        var perguntaPeso = MensagemIa.builder().papel(assistente).conteudo("Qual o seu peso?").build();
+        var respostaPeso = MensagemIa.builder().papel(usuario).conteudo("80kg").build();
+        var cardapio = MensagemIa.builder().papel(usuario).conteudo("faz um cardápio").build();
+
+        assertThat(IaChatService.pedeGeracao(List.of(pergunta))).isFalse();
+        assertThat(IaChatService.pedeGeracao(List.of(pedido, perguntaPeso, respostaPeso))).isTrue();
+        assertThat(IaChatService.pedeGeracao(List.of(cardapio))).isTrue();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void enviarMensagem_perguntaSimples_naoDeveEnviarCatalogo() {
+        stubUsuario();
+        when(openAiChatClient.enviarConversa(anyList()))
+                .thenReturn("{\"resposta\": \"Cerca de 35ml/kg.\", \"sugestao\": null, \"foraDoEscopo\": false}");
+
+        iaChatService.enviarMensagem(USUARIO_ID, new EnviarMensagemRequestDTO(null, "quanta água devo beber?"));
+
+        var captor = org.mockito.ArgumentCaptor.forClass(List.class);
+        verify(openAiChatClient).enviarConversa(captor.capture());
+        List<com.ironfit.api.ia.client.MensagemChat> enviadas = captor.getValue();
+        assertThat(enviadas.get(0).content()).doesNotContain("Catálogo de exercícios").contains("ESCOPO");
+        verify(exercicioRepository, never()).findAllByOrderByNome();
+    }
+
+    @Test
     void enviarMensagem_comSugestaoDeTreinoValida_deveCriarRascunhoPendente() {
         stubUsuario();
         String jsonResposta =

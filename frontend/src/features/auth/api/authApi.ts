@@ -1,3 +1,5 @@
+//Envia as operações de cadastro, login, logout, recuperação e alteração de senha para o backend.
+
 import { axiosClient } from '@/lib/axiosClient'
 import type { LoginResponseDTO } from '@/types/auth'
 

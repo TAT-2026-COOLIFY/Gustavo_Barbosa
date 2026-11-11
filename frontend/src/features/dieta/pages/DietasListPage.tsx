@@ -22,6 +22,9 @@ export function DietasListPage() {
   const [minhasDietas, setMinhasDietas] = useState<DietaResumoDTO[]>([])
   const [templates, setTemplates] = useState<DietaResumoDTO[]>([])
   const [carregando, setCarregando] = useState(true)
+  const [aba, setAba] = useState('minhas')
+  const [aviso, setAviso] = useState<string | null>(null)
+  const [ativando, setAtivando] = useState(false)
 
   async function carregar() {
     const [minhas, temp] = await Promise.all([listarMinhasDietas(), listarTemplates()])
@@ -35,8 +38,19 @@ export function DietasListPage() {
   }, [])
 
   async function handleAtivar(id: number) {
-    await ativarDieta(id)
-    carregar()
+    if (ativando) return
+    setAtivando(true)
+    try {
+      const dieta = await ativarDieta(id)
+      await carregar()
+      // Dieta pronta é ativada como uma cópia em "Minhas dietas" — leva o usuário até lá para ver o resultado.
+      setAba('minhas')
+      setAviso(`"${dieta.nome}" agora é sua dieta ativa.`)
+    } catch {
+      alert('Não foi possível ativar a dieta. Tente novamente.')
+    } finally {
+      setAtivando(false)
+    }
   }
 
   async function handleDuplicar(id: number) {
@@ -90,13 +104,16 @@ export function DietasListPage() {
           </div>
 
           {!carregando && (
-            <Tabs defaultValue="minhas">
+            <Tabs value={aba} onValueChange={setAba}>
               <TabsList>
                 <TabsTrigger value="minhas">Minhas dietas</TabsTrigger>
                 <TabsTrigger value="templates">Dietas prontas</TabsTrigger>
               </TabsList>
 
               <TabsContent value="minhas">
+                {aviso && (
+                  <p className="mb-3 rounded-lg border border-primary/40 bg-primary/10 p-3 text-sm">{aviso}</p>
+                )}
                 {minhasDietas.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Você ainda não criou nenhuma dieta. Crie uma nova ou duplique uma dieta pronta.
@@ -108,6 +125,7 @@ export function DietasListPage() {
                         key={dieta.id}
                         dieta={dieta}
                         own
+                        ativando={ativando}
                         onAtivar={() => handleAtivar(dieta.id)}
                         onDuplicar={() => handleDuplicar(dieta.id)}
                         onEditar={() => navigate(`/dietas/${dieta.id}/editar`)}
@@ -126,6 +144,7 @@ export function DietasListPage() {
                       key={dieta.id}
                       dieta={dieta}
                       own={false}
+                      ativando={ativando}
                       onAtivar={() => handleAtivar(dieta.id)}
                       onDuplicar={() => handleDuplicar(dieta.id)}
                       onToggleFavorito={() => handleToggleFavorito(dieta.id)}

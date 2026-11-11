@@ -142,13 +142,19 @@ public class DietaService {
     @Transactional
     public DietaResponseDTO duplicar(Long usuarioId, Long dietaId) {
         Dieta origem = buscarAcessivel(usuarioId, dietaId);
+        Dieta copia = copiarParaUsuario(usuarioId, origem, origem.getNome() + " (cópia)");
+        return montarResponseDTO(copia, usuarioId);
+    }
+
+    /** Copia uma dieta (com refeições e itens) para o usuário, como dieta própria de origem MANUAL. */
+    private Dieta copiarParaUsuario(Long usuarioId, Dieta origem, String nome) {
         Usuario usuario = usuarioRepository
                 .findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         Dieta copia = Dieta.builder()
                 .usuario(usuario)
-                .nome(origem.getNome() + " (cópia)")
+                .nome(nome)
                 .origem(OrigemDieta.MANUAL)
                 .templateOrigemId(origem.getId())
                 .pesoReferenciaKg(origem.getPesoReferenciaKg())
@@ -163,7 +169,7 @@ public class DietaService {
                 .build();
         dietaRepository.save(copia);
 
-        var refeicoesOrigem = refeicaoRepository.findByDietaIdOrderByOrdem(dietaId);
+        var refeicoesOrigem = refeicaoRepository.findByDietaIdOrderByOrdem(origem.getId());
         var requests = refeicoesOrigem.stream()
                 .map(refeicao -> {
                     var itensOrigem = refeicaoAlimentoRepository.findByRefeicaoIdOrderByOrdem(refeicao.getId());
@@ -175,21 +181,37 @@ public class DietaService {
                 })
                 .toList();
 
-        var refeicoes = salvarRefeicoes(copia, requests);
-        return dietaMapper.toResponseDTO(copia, false, refeicoes);
+        salvarRefeicoes(copia, requests);
+        return copia;
     }
 
+    /**
+     * Ativa uma dieta do usuário. Uma dieta-modelo do sistema não pode ser ativada diretamente (é compartilhada
+     * entre todos): ativá-la cria uma cópia própria do usuário e ativa a cópia — ou reaproveita a cópia criada
+     * numa ativação anterior desse mesmo modelo, para não acumular duplicatas.
+     */
     @Transactional
     public DietaResponseDTO ativar(Long usuarioId, Long dietaId) {
         Dieta dieta = dietaRepository
                 .findByIdAndUsuarioId(dietaId, usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Dieta não encontrada"));
+                .orElseGet(() -> obterCopiaDoModelo(usuarioId, dietaId));
 
-        dietaRepository.desativarTodasDoUsuario(usuarioId);
-        dieta.setAtiva(true);
-        dietaRepository.save(dieta);
+        // Já ativa: não faz nada. Rodar o UPDATE em massa aqui gravaria ativa=false no banco, e o setAtiva(true)
+        // não seria persistido (a entidade carregada já estava true, então o Hibernate não vê alteração).
+        if (!dieta.isAtiva()) {
+            dietaRepository.desativarTodasDoUsuario(usuarioId);
+            dieta.setAtiva(true);
+            dietaRepository.save(dieta);
+        }
 
         return montarResponseDTO(dieta, usuarioId);
+    }
+
+    private Dieta obterCopiaDoModelo(Long usuarioId, Long dietaId) {
+        Dieta modelo = buscarAcessivel(usuarioId, dietaId);
+        return dietaRepository
+                .findFirstByUsuarioIdAndTemplateOrigemIdOrderByCriadoEmDesc(usuarioId, modelo.getId())
+                .orElseGet(() -> copiarParaUsuario(usuarioId, modelo, modelo.getNome()));
     }
 
     /** Retorna a dieta se pertencer ao usuário ou for uma dieta-modelo do sistema. */

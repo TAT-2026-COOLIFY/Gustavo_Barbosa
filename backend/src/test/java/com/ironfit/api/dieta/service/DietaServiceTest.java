@@ -2,6 +2,7 @@ package com.ironfit.api.dieta.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -207,5 +208,74 @@ class DietaServiceTest {
         verify(dietaRepository).desativarTodasDoUsuario(USUARIO_ID);
         assertThat(dieta.isAtiva()).isTrue();
         verify(dietaRepository, never()).desativarTodasDoUsuario(999L);
+    }
+    @Test
+    void ativar_dietaModelo_deveCriarCopiaDoUsuarioEAtivarACopia() {
+        Usuario usuario = Usuario.builder().id(USUARIO_ID).build();
+        Dieta modelo = Dieta.builder()
+                .id(20L)
+                .origem(OrigemDieta.TEMPLATE)
+                .nome("Dieta pronta")
+                .metaCaloriasKcal(2000)
+                .metaProteinaG(150)
+                .metaCarboidratoG(200)
+                .metaGorduraG(60)
+                .metaAguaMl(2500)
+                .build();
+        when(dietaRepository.findByIdAndUsuarioId(20L, USUARIO_ID)).thenReturn(Optional.empty());
+        when(dietaRepository.findById(20L)).thenReturn(Optional.of(modelo));
+        when(dietaRepository.findFirstByUsuarioIdAndTemplateOrigemIdOrderByCriadoEmDesc(USUARIO_ID, 20L))
+                .thenReturn(Optional.empty());
+        when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+        when(refeicaoRepository.findByDietaIdOrderByOrdem(any())).thenReturn(List.of());
+
+        dietaService.ativar(USUARIO_ID, 20L);
+
+        var captor = org.mockito.ArgumentCaptor.forClass(Dieta.class);
+        verify(dietaRepository, org.mockito.Mockito.atLeastOnce()).save(captor.capture());
+        Dieta copia = captor.getValue();
+        assertThat(copia).isNotSameAs(modelo);
+        assertThat(copia.getUsuario()).isEqualTo(usuario);
+        assertThat(copia.getNome()).isEqualTo("Dieta pronta");
+        assertThat(copia.getTemplateOrigemId()).isEqualTo(20L);
+        assertThat(copia.isAtiva()).isTrue();
+        assertThat(modelo.isAtiva()).isFalse();
+        verify(dietaRepository).desativarTodasDoUsuario(USUARIO_ID);
+    }
+
+    @Test
+    void ativar_dietaModeloJaAtivadaAntes_deveReaproveitarCopiaExistente() {
+        Usuario usuario = Usuario.builder().id(USUARIO_ID).build();
+        Dieta modelo = Dieta.builder().id(20L).origem(OrigemDieta.TEMPLATE).nome("Dieta pronta").build();
+        Dieta copiaExistente = Dieta.builder()
+                .id(30L)
+                .usuario(usuario)
+                .origem(OrigemDieta.MANUAL)
+                .templateOrigemId(20L)
+                .nome("Dieta pronta")
+                .build();
+        when(dietaRepository.findByIdAndUsuarioId(20L, USUARIO_ID)).thenReturn(Optional.empty());
+        when(dietaRepository.findById(20L)).thenReturn(Optional.of(modelo));
+        when(dietaRepository.findFirstByUsuarioIdAndTemplateOrigemIdOrderByCriadoEmDesc(USUARIO_ID, 20L))
+                .thenReturn(Optional.of(copiaExistente));
+        when(refeicaoRepository.findByDietaIdOrderByOrdem(30L)).thenReturn(List.of());
+
+        dietaService.ativar(USUARIO_ID, 20L);
+
+        assertThat(copiaExistente.isAtiva()).isTrue();
+        verify(dietaRepository).save(copiaExistente);
+        verify(usuarioRepository, never()).findById(any());
+    }
+    @Test
+    void ativar_dietaJaAtiva_naoDeveDesativarNada() {
+        Usuario usuario = Usuario.builder().id(USUARIO_ID).build();
+        Dieta dieta = Dieta.builder().id(10L).usuario(usuario).origem(OrigemDieta.MANUAL).nome("Dieta X").ativa(true).build();
+        when(dietaRepository.findByIdAndUsuarioId(10L, USUARIO_ID)).thenReturn(Optional.of(dieta));
+        when(refeicaoRepository.findByDietaIdOrderByOrdem(10L)).thenReturn(List.of());
+
+        dietaService.ativar(USUARIO_ID, 10L);
+
+        assertThat(dieta.isAtiva()).isTrue();
+        verify(dietaRepository, never()).desativarTodasDoUsuario(any());
     }
 }

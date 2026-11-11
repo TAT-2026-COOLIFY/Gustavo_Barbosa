@@ -19,6 +19,7 @@ export function RefeicaoFormItem({ control, index, onRemoverRefeicao }: Refeicao
 
   const errosAlimentos = formState.errors.refeicoes?.[index]?.alimentos
   const erroLista = errosAlimentos && !Array.isArray(errosAlimentos) ? errosAlimentos.message : undefined
+  const erroNome = formState.errors.refeicoes?.[index]?.nome?.message
 
   return (
     <div className="glass flex flex-col gap-3 rounded-xl p-4">
@@ -26,6 +27,7 @@ export function RefeicaoFormItem({ control, index, onRemoverRefeicao }: Refeicao
         <div className="flex-1">
           <Label className="text-xs">Nome da refeição</Label>
           <Input className="mt-1" placeholder="Ex.: Café da manhã" {...register(`refeicoes.${index}.nome`)} />
+          {erroNome && <p className="text-xs text-destructive">{erroNome}</p>}
         </div>
         <div className="w-28">
           <Label className="text-xs">Horário</Label>
@@ -50,6 +52,7 @@ export function RefeicaoFormItem({ control, index, onRemoverRefeicao }: Refeicao
               <span className="flex-1 truncate text-sm">{field.alimentoNome || 'Alimento'}</span>
               <Input
                 className="w-20"
+                aria-invalid={!!errosAlimentos?.[alimentoIndex]?.quantidadeGramas}
                 placeholder="g"
                 {...register(`refeicoes.${index}.alimentos.${alimentoIndex}.quantidadeGramas`)}
               />

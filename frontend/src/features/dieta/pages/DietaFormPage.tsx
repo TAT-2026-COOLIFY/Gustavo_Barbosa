@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { isAxiosError } from 'axios'
 import { Controller, FormProvider, useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -46,6 +47,7 @@ export function DietaFormPage() {
   const rascunhoIa = location.state as { rascunhoIaId?: number; dados?: RascunhoDietaDados } | null
   const [preview, setPreview] = useState<MetaNutricionalCalculadaDTO | null>(null)
   const [calculando, setCalculando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
   const [alimentosCatalogo, setAlimentosCatalogo] = useState<AlimentoResponseDTO[]>([])
 
   const form = useForm<DietaFormValues>({
@@ -145,9 +147,12 @@ export function DietaFormPage() {
     if (!peso || !nivel || !objetivo) return
 
     setCalculando(true)
+    setErro(null)
     try {
       const resultado = await calcularMetas({ pesoReferenciaKg: Number(peso), nivelAtividade: nivel, tipoObjetivo: objetivo })
       setPreview(resultado)
+    } catch (error) {
+      setErro(mensagemDoErro(error, 'Não foi possível calcular as metas agora. Tente novamente.'))
     } finally {
       setCalculando(false)
     }
@@ -177,14 +182,23 @@ export function DietaFormPage() {
       })),
     }
 
-    if (editando) {
-      await atualizarDieta(Number(id), payload)
-    } else if (rascunhoIa?.rascunhoIaId) {
-      await confirmarRascunhoDieta(rascunhoIa.rascunhoIaId, payload)
-    } else {
-      await criarDieta(payload)
+    setErro(null)
+    try {
+      if (editando) {
+        await atualizarDieta(Number(id), payload)
+      } else if (rascunhoIa?.rascunhoIaId) {
+        await confirmarRascunhoDieta(rascunhoIa.rascunhoIaId, payload)
+      } else {
+        await criarDieta(payload)
+      }
+      navigate('/dietas')
+    } catch (error) {
+      setErro(mensagemDoErro(error, 'Não foi possível salvar a dieta. Tente novamente.'))
     }
-    navigate('/dietas')
+  }
+
+  function mensagemDoErro(error: unknown, padrao: string) {
+    return isAxiosError(error) && error.response?.data?.message ? error.response.data.message : padrao
   }
 
   return (
@@ -262,6 +276,9 @@ export function DietaFormPage() {
                               </Select>
                             )}
                           />
+                          {errors.nivelAtividade && (
+                            <p className="text-xs text-destructive">{errors.nivelAtividade.message}</p>
+                          )}
                         </div>
                         <div>
                           <Label className="text-xs">Objetivo</Label>
@@ -283,6 +300,9 @@ export function DietaFormPage() {
                               </Select>
                             )}
                           />
+                          {errors.tipoObjetivoReferencia && (
+                            <p className="text-xs text-destructive">{errors.tipoObjetivoReferencia.message}</p>
+                          )}
                         </div>
                       </div>
 
@@ -306,22 +326,27 @@ export function DietaFormPage() {
                       <div>
                         <Label className="text-xs">Calorias (kcal)</Label>
                         <Input className="mt-1" {...register('metaCaloriasKcal')} />
+                        {errors.metaCaloriasKcal && <p className="text-xs text-destructive">{errors.metaCaloriasKcal.message}</p>}
                       </div>
                       <div>
                         <Label className="text-xs">Proteína (g)</Label>
                         <Input className="mt-1" {...register('metaProteinaG')} />
+                        {errors.metaProteinaG && <p className="text-xs text-destructive">{errors.metaProteinaG.message}</p>}
                       </div>
                       <div>
                         <Label className="text-xs">Carboidrato (g)</Label>
                         <Input className="mt-1" {...register('metaCarboidratoG')} />
+                        {errors.metaCarboidratoG && <p className="text-xs text-destructive">{errors.metaCarboidratoG.message}</p>}
                       </div>
                       <div>
                         <Label className="text-xs">Gordura (g)</Label>
                         <Input className="mt-1" {...register('metaGorduraG')} />
+                        {errors.metaGorduraG && <p className="text-xs text-destructive">{errors.metaGorduraG.message}</p>}
                       </div>
                       <div>
                         <Label className="text-xs">Água (ml)</Label>
                         <Input className="mt-1" {...register('metaAguaMl')} />
+                        {errors.metaAguaMl && <p className="text-xs text-destructive">{errors.metaAguaMl.message}</p>}
                       </div>
                     </div>
                   )}
@@ -347,6 +372,17 @@ export function DietaFormPage() {
                       <RefeicaoFormItem key={field.id} control={control} index={index} onRemoverRefeicao={() => remove(index)} />
                     ))}
                   </div>
+
+                  {erro && (
+                    <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                      <p>{erro}</p>
+                      {erro.includes('perfil') && (
+                        <Link to="/perfil" className="mt-1 inline-block font-medium underline">
+                          Completar meu perfil
+                        </Link>
+                      )}
+                    </div>
+                  )}
 
                   <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? 'Salvando...' : 'Salvar dieta'}

@@ -28,7 +28,7 @@ public class SerieExecutada extends BaseEntity {
     private SessaoTreino sessaoTreino;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "treino_exercicio_id", nullable = false)
+    @JoinColumn(name = "treino_exercicio_id")
     private TreinoExercicio treinoExercicio;
 
     @Column(name = "numero_serie", nullable = false)

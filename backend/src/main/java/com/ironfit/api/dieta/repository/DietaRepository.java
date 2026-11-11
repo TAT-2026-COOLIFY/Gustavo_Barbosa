@@ -19,6 +19,8 @@ public interface DietaRepository extends JpaRepository<Dieta, Long> {
 
     Optional<Dieta> findByUsuarioIdAndAtivaTrue(Long usuarioId);
 
+    Optional<Dieta> findFirstByUsuarioIdAndTemplateOrigemIdOrderByCriadoEmDesc(Long usuarioId, Long templateOrigemId);
+
     @Modifying
     @Query("UPDATE Dieta d SET d.ativa = false WHERE d.usuario.id = :usuarioId AND d.ativa = true")
     void desativarTodasDoUsuario(@Param("usuarioId") Long usuarioId);

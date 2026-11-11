@@ -8,6 +8,7 @@ import type { DietaResumoDTO } from '@/types/dieta'
 interface DietaCardProps {
   dieta: DietaResumoDTO
   own: boolean
+  ativando?: boolean
   onAtivar: () => void
   onDuplicar: () => void
   onEditar?: () => void
@@ -15,7 +16,7 @@ interface DietaCardProps {
   onToggleFavorito: () => void
 }
 
-export function DietaCard({ dieta, own, onAtivar, onDuplicar, onEditar, onExcluir, onToggleFavorito }: DietaCardProps) {
+export function DietaCard({ dieta, own, ativando = false, onAtivar, onDuplicar, onEditar, onExcluir, onToggleFavorito }: DietaCardProps) {
   return (
     <Card className="glass border-0">
       <CardHeader>
@@ -45,9 +46,9 @@ export function DietaCard({ dieta, own, onAtivar, onDuplicar, onEditar, onExclui
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
         {!dieta.ativa && (
-          <Button size="sm" onClick={onAtivar}>
+          <Button size="sm" onClick={onAtivar} disabled={ativando}>
             <CheckCircle2 />
-            Ativar
+            {ativando ? 'Ativando...' : 'Ativar'}
           </Button>
         )}
         <Button size="sm" variant="outline" onClick={onDuplicar}>

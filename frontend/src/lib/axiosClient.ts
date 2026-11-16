@@ -4,12 +4,20 @@ import type { LoginResponseDTO } from '@/types/auth'
 
 const REFRESH_TOKEN_STORAGE_KEY = 'ironfit.refreshToken'
 
+
+const API_URL = (
+  import.meta.env.VITE_API_URL || ''
+).replace(/\/$/, '')
+
+
+
 export const axiosClient = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
 })
+
 
 let accessToken: string | null = null
 let onAuthFailure: (() => void) | null = null
@@ -48,7 +56,12 @@ async function refreshAccessToken(): Promise<string | null> {
 
   if (!refreshPromise) {
     refreshPromise = axios
-      .post<LoginResponseDTO>('/api/auth/refresh', { refreshToken })
+      
+.post<LoginResponseDTO>(
+  `${API_URL}/api/auth/refresh`,
+  { refreshToken }
+)
+
       .then(({ data }) => {
         setAccessToken(data.accessToken)
         setRefreshToken(data.refreshToken)
